@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "292769921948",
+    "project_id": "deepfract",
+    "storage_bucket": "deepfract.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:292769921948:android:bc45977485373122692659",
+        "android_client_info": {
+          "package_name": "com.tony.deepfract"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "292769921948-riqvag44td8trh7cbq91nk5vjtmgf75d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tony.deepfract",
+            "certificate_hash": "e890672b860c290a465273a76a47092dee390276"
+          }
+        },
+        {
+          "client_id": "292769921948-9v0m54qggf3j915bnfrmocagppk7evhe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA49V5UJgOuraUYNF5qVgl1a2_CuZ3EHE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "292769921948-9v0m54qggf3j915bnfrmocagppk7evhe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

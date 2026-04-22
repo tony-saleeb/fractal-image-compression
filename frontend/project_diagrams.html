@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepFract - Project Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .diagram-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .diagram-title {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .diagram-description {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .mermaid {
+            text-align: center;
+        }
+        
+        /* Style sequence diagram termination markers */
+        .mermaid svg .note {
+            fill: transparent !important;
+            stroke: transparent !important;
+        }
+        
+        .mermaid svg .noteText {
+            font-size: 32px !important;
+            fill: #000 !important;
+            font-weight: bold !important;
+        }
+        
+        /* Style the main 'else' label (e.g., "User clicks 'Share'") */
+        .mermaid svg text[data-else-label="true"] {
+            font-weight: bold !important;
+            fill: #000000 !important;
+            font-size: 14px !important;
+        }
+        
+        /* Style the 'else' text we add with JavaScript */
+        .mermaid svg text.custom-else-label {
+            font-size: 10px !important;
+            font-weight: bold !important;
+            fill: #000000 !important;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DeepFract</h1>
+            <p>AI-Powered Fractal Image Compression - Project Diagrams</p>
+        </div>
+        
+        <div class="content">
+            
+            <div id="sequence" class="diagram-section">
+                <div class="diagram-container">
+                    <h2 class="diagram-title">Sequence Diagram</h2>
+                    <p class="diagram-description">
+                        This diagram shows the sequence of interactions when a user compresses an image in the DeepFract application.
+                    </p>
+                    
+                    <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant WH as Web Home Screen
+    participant IPS as Image Picker Service
+    participant CS as Compression Service
+    participant CLO as Compression Loading Overlay
+    participant CRS as Compression Result Screen
+    
+    U->>WH: Open Web Application
+    WH->>U: Display Home Screen
+    
+    U->>WH: Click "Upload Image"
+    WH->>U: Show Upload Modal
+    
+    alt User chooses "Choose from Gallery"
+        U->>WH: Select "Choose from Gallery"
+        WH->>IPS: pick Image From Gallery
+        IPS->>U: Open File Picker
+        U->>IPS: Select Image
+        IPS->>WH: Return Image
+    else User chooses "Take a Photo"
+        U->>WH: Select "Take a Photo"
+        WH->>IPS: capture From Camera
+        IPS->>U: Open Camera
+        U->>IPS: Capture Photo
+        IPS->>WH: Return Image
+    end
+    
+    WH->>WH: Convert to File & Bytes
+    WH->>U: Display Selected Image
+    
+    U->>WH: Click "Compress Now"
+    WH->>CLO: Show Loading Overlay
+    CLO->>U: Display Scanning Animation
+    
+    WH->>CS: compress Image
+    
+    alt Compression Successful
+        CS->>CS: Analyze Image
+        CS->>CS: Apply Fractal Compression
+        CS->>CS: AI Optimization
+        CS->>WH: Return CompressionResult
+        WH->>CLO: Hide Loading Overlay
+        WH->>CRS: Navigate to Result Screen
+        CRS->>U: Display Compression Results
+        
+        alt User clicks "Download"
+            U->>CRS: Click "Download"
+            CRS->>U: Download Compressed Image
+        else User clicks "Share"
+            U->>CRS: Click "Share"
+            CRS->>U: Open Share Dialog
+        else User clicks "Compress Another"
+            U->>CRS: Click "Compress Another"
+            CRS->>WH: Navigate Back to Home
+        else User performs other action
+            U->>CRS: Other actions
+            CRS->>U: Handle action
+        end
+    else Compression Failed
+        CS->>WH: Return Error
+        WH->>CLO: Hide Loading Overlay
+        WH->>U: Display Error Message
+    end
+    
+    %% Lifeline Termination Markers (X marks)
+    Note over U: ✗
+    Note over WH: ✗
+    Note over IPS: ✗
+    Note over CS: ✗
+    Note over CLO: ✗
+    Note over CRS: ✗
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'linear'
+            }
+        });
+        
+        /**
+         * This function runs after Mermaid renders to manually style the diagram.
+         * It performs two tasks:
+         * 1. Styles the '✗' termination markers to be large and transparent.
+         * 2. Manually adds "else" labels in the corner of 'else' blocks.
+         */
+        function styleSequenceDiagram() {
+            let attempts = 0;
+            const maxAttempts = 10; // Try for 5 seconds
+            
+            const tryStyle = () => {
+                attempts++;
+                const sequenceDiagram = document.querySelector('#sequence .mermaid svg');
+                
+                // Check if the diagram and the 'else' labels are rendered
+                if (sequenceDiagram && sequenceDiagram.querySelector('text[data-else-label="true"]')) {
+                    
+                    // --- 1. Style '✗' Markers ---
+                    const notes = sequenceDiagram.querySelectorAll('.note');
+                    notes.forEach(note => {
+                        note.setAttribute('fill', 'transparent');
+                        note.setAttribute('stroke', 'transparent');
+                    });
+                    const noteTexts = sequenceDiagram.querySelectorAll('.noteText');
+                    noteTexts.forEach(text => {
+                        if (text.textContent.includes('✗')) {
+                            text.setAttribute('font-size', '40');
+                            text.setAttribute('font-weight', 'bold');
+                        }
+                    });
+
+                    // --- 2. Add 'else' labels (NEW, CORRECTED LOGIC) ---
+                    const elseDividerLabels = sequenceDiagram.querySelectorAll('text[data-else-label="true"]');
+                    
+                    elseDividerLabels.forEach(label => {
+                        // Get the parent group of the label (the "divider" group)
+                        let dividerGroup = label.parentElement;
+                        while(dividerGroup && dividerGroup.tagName !== 'g') {
+                            dividerGroup = dividerGroup.parentElement;
+                        }
+                        if (!dividerGroup) return;
+
+                        // The actual 'else' block group is the *next* <g> sibling
+                        let elseBlockGroup = dividerGroup.nextElementSibling;
+                        while (elseBlockGroup && elseBlockGroup.tagName !== 'g') {
+                            elseBlockGroup = elseBlockGroup.nextElementSibling;
+                        }
+                        if (!elseBlockGroup) return;
+
+                        // Find the main rectangle of *that* block
+                        const boxRect = elseBlockGroup.querySelector('rect');
+                        if (!boxRect) return;
+
+                        try {
+                            const boxCoords = boxRect.getBBox();
+                            const x = boxCoords.x;
+                            const y = boxCoords.y;
+
+                            const uniqueId = `else-label-${x}-${y}`;
+                            if (sequenceDiagram.querySelector(`[data-else-id="${uniqueId}"]`)) {
+                                return; // Already added
+                            }
+
+                            const elseText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                            elseText.setAttribute('x', x + 5);
+                            elseText.setAttribute('y', y + 12); // Position in the tab corner
+                            elseText.setAttribute('class', 'custom-else-label');
+                            elseText.setAttribute('data-else-id', uniqueId);
+                            elseText.textContent = 'else';
+                            
+                            // Add the label to the 'else' block group
+                            elseBlockGroup.appendChild(elseText);
+
+                        } catch (e) {
+                            console.error("Error drawing custom 'else' label:", e);
+                        }
+                    });
+
+                } else if (attempts < maxAttempts) {
+                    // If not ready, try again
+                    setTimeout(tryStyle, 500);
+                }
+            };
+            
+            // Start the first attempt
+            setTimeout(tryStyle, 500);
+        }
+        
+        // Watch for sequence diagram rendering
+        document.addEventListener('DOMContentLoaded', function() {
+            const observer = new MutationObserver(function(mutations, obs) {
+                const svg = document.querySelector('#sequence .mermaid svg');
+                if (svg) {
+                    styleSequenceDiagram();
+                    obs.disconnect(); // Stop observing once we've styled it
+                }
+            });
+            
+            const sequenceSection = document.getElementById('sequence');
+            if (sequenceSection) {
+                observer.observe(sequenceSection, { 
+                    childList: true, 
+                    subtree: true 
+                });
+            }
+        });
+    </script>
+</body>
+</html>

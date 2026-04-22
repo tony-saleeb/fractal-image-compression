@@ -1,0 +1,146 @@
+sequenceDiagram
+    autonumber
+    
+    participant U as 👤 User
+    participant App as 📱 DeepFractApp
+    participant TP as 🎨 ThemeProvider
+    participant SS as ⚡ SplashScreen
+    participant OS as 📖 OnboardingScreen
+    participant HS as 🏠 HomeScreen
+    participant IPS as 📷 ImagePickerService
+    participant CLO as ⏳ LoadingOverlay
+    participant CS as 🗜️ CompressionService
+    participant CRS as ✅ ResultScreen
+    participant Backend as 🖥️ Backend API
+
+    rect rgb(230, 240, 255)
+        Note over U,Backend: 🚀 APP INITIALIZATION
+        U->>App: Launch Application
+        App->>TP: Initialize ThemeProvider
+        TP->>TP: Load saved theme preference
+        App->>SS: Display SplashScreen
+        SS->>SS: Play entrance animation (1.8s)
+        SS->>SS: Show fractal logo + loading dots
+    end
+
+    rect rgb(255, 243, 224)
+        Note over U,Backend: ⏱️ NAVIGATION (after 2.5s)
+        alt Platform = Web
+            SS->>HS: Skip to HomeScreen
+        else Platform = Mobile
+            SS->>OS: Navigate to OnboardingScreen
+            OS->>U: Show Page 1: High Compression Power
+            U->>OS: Next
+            OS->>U: Show Page 2: Lightning Fast AI
+            U->>OS: Next
+            OS->>U: Show Page 3: Simple & Powerful
+            U->>OS: Get Started
+            OS->>HS: Navigate to HomeScreen
+        end
+    end
+
+    rect rgb(232, 245, 233)
+        Note over U,Backend: 🖼️ IMAGE SELECTION
+        U->>HS: Tap "Select Image"
+        HS->>IPS: showImageSourceDialog()
+        IPS->>U: Show options: Gallery / Camera
+        
+        alt User selects Gallery
+            U->>IPS: Choose Gallery
+            IPS->>IPS: pickFromGallery()
+        else User selects Camera
+            U->>IPS: Choose Camera
+            IPS->>IPS: captureFromCamera()
+        end
+        
+        IPS-->>HS: Return selected File
+        HS->>HS: Display image preview
+        HS->>U: Enable "Compress" button
+    end
+
+    rect rgb(255, 236, 179)
+        Note over U,Backend: 🗜️ COMPRESSION PROCESS
+        U->>HS: Tap "Compress Image"
+        HS->>HS: Record start time
+        HS->>CLO: Show CompressionLoadingOverlay
+        
+        CLO->>CLO: Display image with blur effect
+        CLO->>CLO: Show fractal animation
+        
+        loop Progress: 0% → 100%
+            CLO->>CLO: Update progress bar
+            CLO->>CLO: Show status messages
+            Note right of CLO: "Analyzing image..."
+            Note right of CLO: "Applying fractal patterns..."
+            Note right of CLO: "Optimizing compression..."
+            Note right of CLO: "Finalizing..."
+        end
+        
+        CLO->>CS: compressImage(file)
+        
+        alt Backend Connected (Future)
+            CS->>Backend: POST /api/compress
+            Backend->>Backend: Convert to grayscale
+            Backend->>Backend: Apply AI fractal compression
+            Backend-->>CS: {compressed_image, size, ratio}
+        else Mock Mode (Current)
+            CS->>CS: Simulate 3s delay
+            CS-->>CS: Return mock result
+        end
+        
+        CS-->>CLO: CompressionResult
+        CLO->>CLO: Trigger completion animation
+        CLO-->>HS: Close overlay
+    end
+
+    rect rgb(225, 245, 254)
+        Note over U,Backend: 📊 RESULT DISPLAY
+        HS->>HS: Calculate compression time
+        HS->>CRS: Navigate to CompressionResultScreen
+        
+        CRS->>CRS: Animate entrance (fade + slide)
+        CRS->>CRS: Start particle background
+        CRS->>U: Show compressed image
+        CRS->>U: Display stats card
+        Note right of CRS: Original: 10.0 MB
+        Note right of CRS: Compressed: 1.0 MB
+        Note right of CRS: Time: 3.2s
+        
+        alt Toggle View
+            U->>CRS: Tap "Original"
+            CRS->>CRS: AnimatedSwitcher to original
+            U->>CRS: Tap "Compressed"
+            CRS->>CRS: AnimatedSwitcher to compressed
+        end
+    end
+
+    rect rgb(243, 229, 245)
+        Note over U,Backend: 💾 USER ACTIONS
+        alt Download Image
+            U->>CRS: Tap Download
+            CRS->>CRS: Save to device (TODO: Backend)
+            CRS->>U: Show success snackbar
+        else Share Image
+            U->>CRS: Tap Share
+            CRS->>CRS: Share.shareXFiles()
+            CRS->>U: Open share sheet
+        else Compress New Image
+            U->>CRS: Tap "New"
+            CRS->>U: Show confirmation dialog
+            U->>CRS: Confirm "Discard & New"
+            CRS->>IPS: Show upload modal
+            IPS-->>CRS: New image selected
+            CRS->>CRS: Update state & re-animate
+        end
+    end
+
+    rect rgb(255, 235, 238)
+        Note over U,Backend: 🌓 THEME SWITCHING (Anytime)
+        U->>TP: Tap theme toggle
+        TP->>TP: Capture current screen
+        TP->>TP: Toggle light ↔ dark
+        TP->>TP: Save preference
+        TP->>App: Notify listeners
+        App->>App: Rebuild with new theme
+        TP->>TP: Fade out old screen (600ms)
+    end

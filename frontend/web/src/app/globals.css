@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+/* ─── DeepFract Design System (v5) ─────────────────────────────────────────────── */
+
+:root {
+  --df-blue: #007AFF;
+  --df-blue-dark: #0033FF;
+  --df-blue-light: #5AC8FA;
+  
+  --theme-transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Theme transitions are defined below in the Universal Theme Transition section */
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-gpu {
+  will-change: transform, opacity;
+}
+
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+:root {
+  --theme-bg: #030305;
+  --theme-text: #ffffff;
+  --theme-blob-1: #2563eb;
+  --theme-blob-2: #1e3a8a;
+  --theme-blob-3: #1e40af;
+  --theme-grid-color: rgba(255, 255, 255, 0.4);
+  --theme-spotlight: rgba(56, 189, 248, 0.15);
+  --theme-card-bg: rgba(255, 255, 255, 0.03);
+  --theme-border: rgba(255, 255, 255, 0.08);
+}
+
+.light-theme {
+  --theme-bg: #FBFBFD;
+  --theme-text: #0F172A;
+  --theme-blob-1: #3B82F6;
+  --theme-blob-2: #60A5FA;
+  --theme-blob-3: #93C5FD;
+  --theme-grid-color: rgba(0, 0, 0, 0.2);
+  --theme-spotlight: rgba(56, 189, 248, 0.1);
+  --theme-card-bg: rgba(255, 255, 255, 0.7);
+  --theme-border: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Universal Theme Transition ─────────────────────────────────────────── */
+
+.theme-transition {
+  transition: background-color var(--theme-transition), 
+              color var(--theme-transition), 
+              border-color var(--theme-transition), 
+              opacity var(--theme-transition),
+              box-shadow var(--theme-transition);
+}
+
+/* ─── Global Base ────────────────────────────────────────────────────────── */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  transition: background-color var(--theme-transition), color var(--theme-transition);
+  scroll-behavior: smooth;
+}
+
+/* ─── Custom scrollbar ────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128,128,128,0.3);
+  border-radius: 3px;
+}
+
+/* ─── Utility animations ──────────────────────────────────────────────────── */
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes float-up {
+  from { transform: translateY(100vh); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  to { transform: translateY(-100vh); opacity: 0; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: float-up var(--duration, 15s) linear infinite;
+}
+
+/* ─── Pattern Utilities ─────────────────────────────────────────────────── */
+
+.neural-pattern {
+  mask-image: radial-gradient(circle at 2px 2px, black 1px, transparent 0);
+  mask-size: 32px 32px;
+}
+
+.bg-mesh {
+  filter: blur(80px);
+  opacity: 0.4;
+}
+
+/* ─── Better Contrast Utilities ──────────────────────────────────────────── */
+
+.text-subtle {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.text-subtle:hover {
+  opacity: 1;
+}
