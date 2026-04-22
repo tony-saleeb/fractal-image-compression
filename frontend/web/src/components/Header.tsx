@@ -18,7 +18,7 @@ const Header = React.memo(function Header() {
         <div className="relative">
           <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20" />
           <img 
-            src="/logo.png" 
+            src="/images/logo.png" 
             alt="DeepFract Logo" 
             className="relative w-16 h-16 object-contain"
           />

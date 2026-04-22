@@ -62,7 +62,7 @@ export default function LoadingOverlay({ isDecompress, isDark }: LoadingOverlayP
             className="relative w-28 h-28 flex items-center justify-center"
           >
             <img 
-              src="/logo.png" 
+              src="/images/logo.png" 
               alt="DeepFract" 
               className="w-28 h-28 object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]"
             />
