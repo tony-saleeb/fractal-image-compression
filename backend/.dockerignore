@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.onnx
+*.onnx.data
+my_custom_sr_decoder_epoch5.pth
+scripts/
+docs/
+.gitignore
+README.md
+LICENSE
