@@ -16,7 +16,7 @@ enum CompressionMode { compress, decompress }
 /// - Web & desktop (local dev): http://localhost:8000
 /// - Android emulator talking to localhost: http://10.0.2.2:8000
 /// - Physical device on same Wi-Fi: replace with your machine's local IP
-const String _kBaseUrl = kIsWeb ? 'http://localhost:8000' : 'http://10.0.2.2:8000';
+const String _kBaseUrl = 'https://tony-saleeb-deepfract-api.hf.space';
 
 /// Service for compressing / decompressing images via the FractalCompression
 /// FastAPI backend (server.py).  The server must be running before calling

@@ -125,13 +125,19 @@ class _AuthScreenState extends State<AuthScreen>
                             blurRadius: 25, spreadRadius: 1,
                           )],
                       ),
-                      child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 40),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     ShaderMask(
                       shaderCallback: (bounds) => AppTheme.premiumGradient.createShader(bounds),
                       child: Text(
-                        'FractalCloud',
+                        'DeepFract',
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: Colors.white,

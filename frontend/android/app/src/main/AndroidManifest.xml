@@ -12,7 +12,7 @@
     <application
         android:label="deepfract"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         
         <!-- Disable Impeller to fix BackdropFilter/blur crashes on emulators -->
         <meta-data

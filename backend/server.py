@@ -19,7 +19,7 @@ Flutter usage:
     // res.stream contains the .fic bytes
 """
 
-import os, sys, io, struct, time, gc, asyncio
+import os, sys, io, struct, time, gc, asyncio, traceback
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -197,11 +197,21 @@ app = FastAPI(title="FractalCompression API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Flutter web / localhost
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],  # CRITICAL: Allows browser Dart code to read X-Time / X-Ratio
+    expose_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    tb = traceback.format_exc()
+    print(f"\n[CRITICAL ERROR] {exc}\n{tb}", flush=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc), "traceback": tb}
+    )
 
 
 @app.get("/health")
@@ -239,11 +249,19 @@ async def compress_endpoint(image: UploadFile = File(...)):
         enc_w, enc_h = source_w, source_h
 
     x = torch.from_numpy(np.array(img)).float().div_(255.0)
-    x = x.permute(2, 0, 1).unsqueeze(0).contiguous(memory_format=torch.channels_last)
+    x = x.permute(2, 0, 1).unsqueeze(0).contiguous()
 
-    h, w    = x.shape[2], x.shape[3]
-    pad, _  = compute_padding(h, w, min_div=16)  # Model needs 2^4=16, not 64
-    x_pad   = F.pad(x, pad, mode='constant', value=0).to(DEVICE)
+    h, w = x.shape[2], x.shape[3]
+    # Ensure multiples of 64 AND at least 128x128 
+    # (Satisfies both 16x main and 4x hyper-prior stages + 5x5 context kernel)
+    target_h = max(128, ((h + 63) // 64) * 64)
+    target_w = max(128, ((w + 63) // 64) * 64)
+    
+    p_h = target_h - h
+    p_w = target_w - w
+    
+    # Pad right and bottom (F.pad takes [left, right, top, bottom])
+    x_pad = F.pad(x, (0, p_w, 0, p_h), mode='constant', value=0).to(DEVICE)
 
     # ── Heavy inference offloaded to thread pool ──────────────────
     def _compress():
@@ -446,6 +464,6 @@ if __name__ == "__main__":
         app,
         host=HOST,
         port=PORT,
-        log_level="warning",
+        log_level="info",
         timeout_keep_alive=600,   # keep connection alive for slow CPU inference
     )

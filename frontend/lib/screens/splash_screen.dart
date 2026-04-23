@@ -226,10 +226,12 @@ class _SplashScreenState extends State<SplashScreen>
                                         ),
                                       ],
                                     ),
-                                    child: Icon(
-                                      Icons.image_outlined,
-                                      size: 36,
-                                      color: Colors.white,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Image.asset(
+                                        AppConstants.logoPath,
+                                        fit: BoxFit.contain,
+                                      ),
                                     ),
                                   ),
                                 ],
