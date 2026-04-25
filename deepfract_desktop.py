@@ -424,20 +424,25 @@ class DeepFractApp(ctk.CTk):
         def w():
             try:
                 fic, s = api_compress(path)
-                self.after(0, lambda: self._stat("RATIO", f"{s['ratio']:.1f}:1"))
-                self.after(0, lambda: self._stat("SIZE", human_size(s['compressed_size'])))
-                self.after(0, lambda: self._stat("TIME", f"{s['time']:.1f}s"))
-
+                
                 sp = filedialog.asksaveasfilename(defaultextension=".fic",
                     initialfile=os.path.splitext(os.path.basename(path))[0]+".fic",
                     filetypes=[("FIC","*.fic")])
+                
                 if sp: 
                     open(sp,'wb').write(fic)
-                    self.after(0, lambda: self._unlock("Select Image", "Compression Complete ✓"))
-                    self.after(0, lambda: self._draw_success("Compression Successful!", f"Saved to: {os.path.basename(sp)}"))
+                    def success_flow():
+                        self._stat("RATIO", f"{s['ratio']:.1f}:1")
+                        self._stat("SIZE", human_size(s['compressed_size']))
+                        self._stat("TIME", f"{s['time']:.1f}s")
+                        self._unlock("Select Image", "Compression Complete ✓")
+                        self._draw_success("Compression Successful!", f"Saved to: {os.path.basename(sp)}")
+                    self.after(0, success_flow)
                 else:
-                    self.after(0, lambda: self._unlock("Select Image", "Save Cancelled"))
-                    self.after(0, lambda: self._draw_placeholder())
+                    def cancel_flow():
+                        self._unlock("Select Image", "Save Cancelled")
+                        self._draw_placeholder()
+                    self.after(0, cancel_flow)
             except Exception as e:
                 self.after(0, lambda: self._unlock("Select Image", f"Error: {str(e)[:50]}"))
         threading.Thread(target=w, daemon=True).start()
@@ -455,14 +460,18 @@ class DeepFractApp(ctk.CTk):
                 self._pending_img = img
                 self._pending_name = os.path.splitext(os.path.basename(path))[0]
 
-                self.after(0, lambda: self._show(img))
-                self.after(0, lambda: self._card_lbl.configure(text=f"DECODED OUTPUT — {s['width']}×{s['height']} px"))
-                self.after(0, lambda: self._stat("SIZE", human_size(s['output_size'])))
-                self.after(0, lambda: self._stat("TIME", f"{s['time']:.1f}s"))
-                self.after(0, lambda: self._stat("PSNR", "—"))
-                self.after(0, lambda: self._stat("RMSE", "—"))
-                self.after(0, lambda: self._btn_save.grid())
-                self.after(0, lambda: self._unlock("Select .fic File", "Preview ready — Save when ready"))
+                def finalize():
+                    # ALWAYS unlock first so the loading animation stops immediately
+                    self._unlock("Select .fic File", "Preview ready — Save when ready")
+                    self._show(img)
+                    self._card_lbl.configure(text=f"DECODED OUTPUT — {s['width']}×{s['height']} px")
+                    self._stat("SIZE", human_size(s['output_size']))
+                    self._stat("TIME", f"{s['time']:.1f}s")
+                    self._stat("PSNR", "—")
+                    self._stat("RMSE", "—")
+                    self._btn_save.grid()
+                
+                self.after(0, finalize)
             except Exception as e:
                 self.after(0, lambda: self._unlock("Select .fic File", f"Error: {str(e)[:50]}"))
         threading.Thread(target=w, daemon=True).start()

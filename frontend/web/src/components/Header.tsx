@@ -4,6 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import logoImg from '../../public/images/logo.png';
 
 const Header = React.memo(function Header() {
   const { theme, toggleTheme, isDark } = useTheme();
@@ -18,7 +19,7 @@ const Header = React.memo(function Header() {
         <div className="relative">
           <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20" />
           <img 
-            src="/images/logo.png" 
+            src={logoImg.src} 
             alt="DeepFract Logo" 
             className="relative w-16 h-16 object-contain"
           />
