@@ -4,7 +4,7 @@ class AppDurations {
   AppDurations._(); // Private constructor to prevent instantiation
 
   // Splash & Loading
-  static const Duration splashDelay = Duration(milliseconds: 800);
+  static const Duration splashDelay = Duration(milliseconds: 3500);
   static const Duration compressionSimulation = Duration(seconds: 3);
 
   // Animations - Short

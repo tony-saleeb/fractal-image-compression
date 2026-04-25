@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/theme.dart';
+import '../utils/constants.dart';
 
 class CompressionLoadingOverlay extends StatefulWidget {
   final File imageFile;
@@ -219,25 +220,14 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
               ),
             ),
             
-            // Core Neural Pulse
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                gradient: AppTheme.premiumGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                    blurRadius: 30,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.hub_rounded,
-                color: Colors.white,
-                size: 36,
+            // Rotating Logo
+            Transform.rotate(
+              angle: _rotationAnimation.value,
+              child: Image.asset(
+                AppConstants.logoPath,
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
               ),
             ),
             

@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode _themeMode;
   static const String _themeModeKey = 'theme_mode';
   bool _mounted = true;
 
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
-  ThemeProvider() {
-    // Defer theme loading to avoid initialization issues
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadThemeMode();
-    });
-  }
+  ThemeProvider({bool initialDark = true})
+      : _themeMode = initialDark ? ThemeMode.dark : ThemeMode.light;
 
   Future<void> _loadThemeMode() async {
     try {

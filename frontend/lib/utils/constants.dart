@@ -28,6 +28,7 @@ class AppConstants {
 
   // Asset Paths
   static const String logoPath = 'assets/images/logo.png';
+  static const String logooPath = 'assets/images/logoo.png';
   static const String onboarding1Image = 'assets/images/onboarding1.png';
   static const String onboarding2Image = 'assets/images/onboarding2.png';
   static const String onboarding3Image = 'assets/images/onboarding3.png';

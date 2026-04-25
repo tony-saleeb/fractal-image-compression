@@ -288,25 +288,11 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                 children: [
                   Row(
                     children: [
-                      Container(
+                      Image.asset(
+                        'assets/images/logo.png',
                         width: 48,
                         height: 48,
-                        decoration: BoxDecoration(
-                          gradient: AppTheme.premiumGradient,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primary.withValues(alpha: 0.3),
-                              blurRadius: 15,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.auto_awesome_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(width: 16),
                       Column(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'utils/theme.dart';
 import 'utils/theme_provider.dart';
@@ -20,14 +21,18 @@ Future<void> main() async {
     );
   }
 
+  // Load saved theme before building app so splash gets the right theme
+  final prefs = await SharedPreferences.getInstance();
+  final savedDark = prefs.getBool('theme_mode') ?? true; // default dark
+
   // Make system bars transparent
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
+    SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: savedDark ? Brightness.light : Brightness.dark,
+      statusBarIconBrightness: savedDark ? Brightness.light : Brightness.dark,
     ),
   );
 
@@ -37,7 +42,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider(initialDark: savedDark)),
         ChangeNotifierProvider(create: (_) => CompressionController()),
       ],
       child: const ThemeSwitcher(child: DeepFractApp()),
