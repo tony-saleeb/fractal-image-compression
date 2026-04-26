@@ -1,7 +1,7 @@
 import type { CompressionResult, DecompressionResult } from './types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const REQUEST_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+const REQUEST_TIMEOUT = 60 * 60 * 1000; // 60 minutes
 
 /* ─── Health Check ────────────────────────────────────────────────────────── */
 

@@ -6,7 +6,7 @@ import '../utils/file_size_extension.dart';
 
 /// Maximum time to wait for a server response. Large images on CPU can
 /// take 3-5 minutes; set this high enough to never cut off a valid job.
-const _kRequestTimeout = Duration(minutes: 5);
+const _kRequestTimeout = Duration(minutes: 60);
 
 /// Whether the user wants to compress an image or decompress a .fic file.
 enum CompressionMode { compress, decompress }

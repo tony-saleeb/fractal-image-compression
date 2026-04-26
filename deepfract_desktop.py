@@ -36,7 +36,7 @@ def _multipart(url, field, filepath):
     req = urllib.request.Request(url, data=body,
         headers={'Content-Type': f'multipart/form-data; boundary={bd}'}, method='POST')
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=300) as r:
+    with urllib.request.urlopen(req, timeout=3600) as r:
         return r.read(), dict(r.headers), time.time() - t0, len(data)
 
 def api_compress(path):
@@ -199,7 +199,7 @@ class DeepFractApp(ctk.CTk):
         self._btn_save.grid_remove() # Hidden initially
 
         # Context Label
-        self._ws_hint = ctk.CTkLabel(bot_area, text="JPG · PNG · WebP — up to 50 MB",
+        self._ws_hint = ctk.CTkLabel(bot_area, text="JPG · PNG · WebP — No Size Limit",
             font=ctk.CTkFont("Segoe UI", 12), text_color=C['muted'])
         self._ws_hint.grid(row=1, column=0, sticky="w", pady=(8,0))
 
@@ -250,7 +250,7 @@ class DeepFractApp(ctk.CTk):
         # Update Workspace Context
         if m == "compress":
             self._ws_title.configure(text="Compress Image")
-            self._ws_hint.configure(text="Supported: JPG, PNG, WebP (Max 50MB)")
+            self._ws_hint.configure(text="Supported: JPG, PNG, WebP (No Size Limit)")
             self._btn_primary.configure(text="Select Image")
         else:
             self._ws_title.configure(text="Decompress Archive")

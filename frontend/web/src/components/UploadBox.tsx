@@ -151,11 +151,10 @@ const UploadBox = React.memo(function UploadBox() {
               <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity" />
             </button>
 
-
-            <p className="text-sm mt-8 opacity-40">
-              {mode === 'compress'
-                ? 'JPG, PNG, WebP up to 50MB'
-                : 'DeepFract .fic format only'}
+            <p className={`text-xs mt-2 transition-colors ${isDark ? 'text-gray-400 group-hover/btn:text-blue-300' : 'text-blue-600/70 group-hover/btn:text-blue-800'}`}>
+              {mode === 'compress' 
+              ? 'JPG, PNG, WebP (No Size Limit)' 
+              : 'DeepFract Archives (.fic)'}
             </p>
           </div>
         </div>
