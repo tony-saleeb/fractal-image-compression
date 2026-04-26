@@ -9,7 +9,7 @@ const ModeSelector = React.memo(function ModeSelector() {
   const { mode, setMode } = useCompressionStore();
 
   return (
-    <div className="flex justify-center mb-12">
+    <div className="flex justify-center mb-8 sm:mb-12 px-2 sm:px-0">
       <div 
         className="relative inline-flex p-1 rounded-2xl border backdrop-blur-xl theme-transition overflow-hidden" 
         style={{ backgroundColor: 'var(--theme-card-bg)', borderColor: 'var(--theme-border)' }}
@@ -26,7 +26,7 @@ const ModeSelector = React.memo(function ModeSelector() {
         <button
           onClick={() => setMode('compress')}
           type="button"
-          className={`relative z-10 px-12 py-4 rounded-xl transition-colors cursor-pointer outline-none ${
+          className={`relative z-10 px-4 sm:px-12 py-3 sm:py-4 rounded-xl transition-colors cursor-pointer outline-none ${
             mode === 'compress' ? 'text-white' : 'opacity-60 hover:opacity-100'
           }`}
         >
@@ -38,7 +38,7 @@ const ModeSelector = React.memo(function ModeSelector() {
         <button
           onClick={() => setMode('decompress')}
           type="button"
-          className={`relative z-10 px-12 py-4 rounded-xl transition-colors cursor-pointer outline-none ${
+          className={`relative z-10 px-4 sm:px-12 py-3 sm:py-4 rounded-xl transition-colors cursor-pointer outline-none ${
             mode === 'decompress' ? 'text-white' : 'opacity-60 hover:opacity-100'
           }`}
         >

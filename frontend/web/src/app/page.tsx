@@ -76,7 +76,7 @@ export default function Home() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-xl bg-red-500/90 text-white backdrop-blur-lg shadow-2xl max-w-lg"
+              className="fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-red-500/90 text-white backdrop-blur-lg shadow-2xl w-[90%] max-w-lg"
             >
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span className="text-sm">{error}</span>
@@ -95,7 +95,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* ── Main Content ───────────────────────────────────────────────────── */}
-        <main className="grow px-6 pt-16 pb-32">
+        <main className="grow px-4 sm:px-6 pt-8 sm:pt-16 pb-20 sm:pb-32">
           <div className="w-full max-w-6xl mx-auto">
             <AnimatePresence mode="wait">
               {currentView === 'result' ? (

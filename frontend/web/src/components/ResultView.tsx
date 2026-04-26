@@ -130,7 +130,7 @@ export default function ResultView({
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <QuickStaticCard 
           icon={<BarChart3 className="w-4 h-4" />} 
           label={mode === 'compress' ? 'Compression Ratio' : 'Neural Expansion'} 
