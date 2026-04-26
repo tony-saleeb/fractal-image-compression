@@ -55,7 +55,7 @@ export async function compressImage(file: File): Promise<CompressionResult> {
   } catch (err: unknown) {
     clearTimeout(id);
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error('Compression timed out (>5 min). Try a smaller image.');
+      throw new Error('Compression timed out (>60 min). File too large or connection lost.');
     }
     throw err;
   }
@@ -90,7 +90,7 @@ export async function decompressFile(file: File): Promise<DecompressionResult> {
   } catch (err: unknown) {
     clearTimeout(id);
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error('Decompression timed out (>5 min). File may be corrupted.');
+      throw new Error('Decompression timed out (>60 min). File may be corrupted or too large.');
     }
     throw err;
   }

@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import filedialog
 import customtkinter as ctk
 from PIL import Image, ImageTk
+Image.MAX_IMAGE_PIXELS = None # Disable decompression bomb limits for massive images
 import urllib.request, urllib.error, json
 
 API_URL = "https://tony-saleeb-deepfract-api.hf.space"
