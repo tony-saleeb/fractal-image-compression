@@ -114,6 +114,8 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                   ),
                   ficBytes: res.ficBytes,
                   compressionRatio: res.formattedRatio,
+                  psnr: res.formattedPsnr,
+                  rmse: res.formattedRmse,
                 ),
           ),
         );

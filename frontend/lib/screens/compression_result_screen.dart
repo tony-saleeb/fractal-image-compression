@@ -21,6 +21,8 @@ class CompressionResultScreen extends StatefulWidget {
   final Duration compressionTime;
   final Uint8List? ficBytes;
   final String? compressionRatio;
+  final String? psnr;
+  final String? rmse;
 
   const CompressionResultScreen({
     super.key,
@@ -33,6 +35,8 @@ class CompressionResultScreen extends StatefulWidget {
     required this.compressionTime,
     this.ficBytes,
     this.compressionRatio,
+    this.psnr,
+    this.rmse,
   });
 
   @override
@@ -244,6 +248,14 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
                 if (widget.compressionRatio != null) ...[
                   _buildVerticalDivider(),
                   _buildModernStat('RATIO', widget.compressionRatio!),
+                ],
+                if (widget.psnr != null && widget.psnr != '0.00 dB') ...[
+                  _buildVerticalDivider(),
+                  _buildModernStat('PSNR', widget.psnr!),
+                ],
+                if (widget.rmse != null && widget.rmse != '0.00') ...[
+                  _buildVerticalDivider(),
+                  _buildModernStat('RMSE', widget.rmse!),
                 ],
                 _buildVerticalDivider(),
                 _buildModernStat(

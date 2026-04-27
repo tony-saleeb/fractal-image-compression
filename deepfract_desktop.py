@@ -45,7 +45,8 @@ def api_compress(path):
     return content, {
         'original_size': orig_sz, 'compressed_size': len(content),
         'ratio': float(h.get('X-Ratio', h.get('x-ratio', '0'))),
-        'bpp': float(h.get('X-BPP', h.get('x-bpp', '0'))),
+        'psnr': float(h.get('X-PSNR', h.get('x-psnr', '0'))),
+        'rmse': float(h.get('X-RMSE', h.get('x-rmse', '0'))),
         'time': float(h.get('X-Time', h.get('x-time', str(wall)))),
     }
 
@@ -268,8 +269,8 @@ class DeepFractApp(ctk.CTk):
 
     def _show_stats_for_mode(self):
         if self._mode == "compress":
-            show = {"RATIO", "SIZE", "TIME"}
-            self._stat_strip.configure(width=280)
+            show = {"RATIO", "PSNR", "RMSE", "SIZE", "TIME"}
+            self._stat_strip.configure(width=420)
         else:
             show = {"PSNR", "RMSE", "SIZE", "TIME"}
             self._stat_strip.configure(width=360)
@@ -434,6 +435,8 @@ class DeepFractApp(ctk.CTk):
                     open(sp,'wb').write(fic)
                     def success_flow():
                         self._stat("RATIO", f"{s['ratio']:.1f}:1")
+                        self._stat("PSNR", f"{s['psnr']:.1f}")
+                        self._stat("RMSE", f"{s['rmse']:.1f}")
                         self._stat("SIZE", human_size(s['compressed_size']))
                         self._stat("TIME", f"{s['time']:.1f}s")
                         self._unlock("Select Image", "Compression Complete ✓")

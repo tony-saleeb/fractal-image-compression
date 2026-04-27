@@ -7,7 +7,8 @@ export interface CompressionResult {
   originalSize: number;
   compressedSize: number;
   compressionRatio: number;
-  bpp: number;
+  psnr: number;
+  rmse: number;
   elapsedSeconds: number;
   width: number;
   height: number;

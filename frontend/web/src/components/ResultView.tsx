@@ -165,11 +165,19 @@ export default function ResultView({
               <div className="aspect-16/10 sm:aspect-video rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center">
                 {mode === 'compress' ? (
                   originalPreviewUrl && (
-                    <img 
-                      src={originalPreviewUrl} 
-                      alt="Source" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                    />
+                    (originalFile?.size ?? 0) > 50 * 1024 * 1024 ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-black/50 text-white">
+                        <ImageIcon className="w-10 h-10 opacity-30 mb-4" />
+                        <p className="text-sm opacity-70 text-center font-medium">Source image too large for browser preview.</p>
+                        <p className="text-xs opacity-40 text-center mt-2">Compression successfully processed by neural backend.</p>
+                      </div>
+                    ) : (
+                      <img 
+                        src={originalPreviewUrl} 
+                        alt="Source" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                      />
+                    )
                   )
                 ) : (
                   decompressedPreviewUrl && (
@@ -213,8 +221,14 @@ export default function ResultView({
               />
               <SpecItem 
                icon={<Activity className="w-4 h-4" />} 
-               label="Efficiency Index" 
-               value={mode === 'compress' ? `${compressResult?.bpp?.toFixed(4) ?? '0'} bpp` : 'N/A'} 
+               label="PSNR" 
+               value={mode === 'compress' ? `${compressResult?.psnr?.toFixed(2) ?? '0'} dB` : 'N/A'} 
+               isDark={isDark} 
+              />
+              <SpecItem 
+               icon={<Activity className="w-4 h-4" />} 
+               label="RMSE" 
+               value={mode === 'compress' ? `${compressResult?.rmse?.toFixed(2) ?? '0'}` : 'N/A'} 
                isDark={isDark} 
               />
             </div>

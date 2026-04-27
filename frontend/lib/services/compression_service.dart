@@ -101,7 +101,8 @@ class CompressionService {
     final headers = streamedResponse.headers;
 
     final ratio = double.tryParse(headers['x-ratio'] ?? '') ?? 0;
-    final bpp = double.tryParse(headers['x-bpp'] ?? '') ?? 0;
+    final psnr = double.tryParse(headers['x-psnr'] ?? '') ?? 0;
+    final rmse = double.tryParse(headers['x-rmse'] ?? '') ?? 0;
     final elapsed = double.tryParse(headers['x-time'] ?? '') ?? 0;
     final width = int.tryParse(headers['x-width'] ?? '') ?? 0;
     final height = int.tryParse(headers['x-height'] ?? '') ?? 0;
@@ -113,7 +114,8 @@ class CompressionService {
       originalSize: originalSize,
       compressedSize: ficBytes.length,
       compressionRatio: ratio,
-      bpp: bpp,
+      psnr: psnr,
+      rmse: rmse,
       elapsedSeconds: elapsed,
       width: width,
       height: height,
@@ -178,7 +180,8 @@ class CompressionResult {
   final int originalSize;
   final int compressedSize;
   final double compressionRatio; // X:1
-  final double bpp;
+  final double psnr;
+  final double rmse;
   final double elapsedSeconds;
   final int width;
   final int height;
@@ -190,7 +193,8 @@ class CompressionResult {
     required this.originalSize,
     required this.compressedSize,
     required this.compressionRatio,
-    required this.bpp,
+    required this.psnr,
+    required this.rmse,
     required this.elapsedSeconds,
     required this.width,
     required this.height,
@@ -199,7 +203,8 @@ class CompressionResult {
   String get formattedOriginalSize => originalSize.toHumanReadableSize();
   String get formattedCompressedSize => compressedSize.toHumanReadableSize();
   String get formattedRatio => '${compressionRatio.toStringAsFixed(1)}:1';
-  String get formattedBpp => '${bpp.toStringAsFixed(4)} bpp';
+  String get formattedPsnr => '${psnr.toStringAsFixed(2)} dB';
+  String get formattedRmse => rmse.toStringAsFixed(2);
   String get formattedTime => '${elapsedSeconds.toStringAsFixed(2)}s';
 }
 
