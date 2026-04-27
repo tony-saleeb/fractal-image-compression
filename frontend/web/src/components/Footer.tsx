@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useTheme } from '@/context/ThemeContext';
+import { Github } from 'lucide-react';
 import logoImg from '../../public/images/logo.png';
 
 const Footer = React.memo(function Footer() {
@@ -22,6 +23,9 @@ const Footer = React.memo(function Footer() {
           <Link href="/help" className="hover:text-blue-500 transition-colors">Help</Link>
           <Link href="/privacy" className="hover:text-blue-500 transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-blue-500 transition-colors">Terms</Link>
+          <a href="https://github.com/tony-saleeb" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-blue-500 transition-colors ml-2">
+            <Github size={16} /> GitHub
+          </a>
         </div>
       </div>
     </footer>
