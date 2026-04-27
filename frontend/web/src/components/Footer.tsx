@@ -12,9 +12,7 @@ const Footer = React.memo(function Footer() {
     <footer className="relative z-20 border-t px-8 py-10 theme-transition backdrop-blur-xl" style={{ borderColor: 'var(--theme-border)' }}>
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-blue-500/20 overflow-hidden bg-blue-500/5">
-            <img src={logoImg.src} alt="DeepFract" className="w-6 h-6 object-contain" />
-          </div>
+          <img src={logoImg.src} alt="DeepFract" className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-md" />
           <p className={`${isDark ? 'opacity-40' : 'opacity-70 text-blue-900'} font-medium`}>
             © 2026 DeepFract. Neural compression technology.
           </p>
