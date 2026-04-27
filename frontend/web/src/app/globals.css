@@ -33,15 +33,15 @@
 }
 
 :root {
-  --theme-bg: #030305;
+  --theme-bg: #000000;
   --theme-text: #ffffff;
-  --theme-blob-1: #2563eb;
-  --theme-blob-2: #1e3a8a;
-  --theme-blob-3: #1e40af;
-  --theme-grid-color: rgba(255, 255, 255, 0.4);
-  --theme-spotlight: rgba(56, 189, 248, 0.15);
-  --theme-card-bg: rgba(255, 255, 255, 0.03);
-  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-blob-1: #1e3a8a;
+  --theme-blob-2: #0f172a;
+  --theme-blob-3: #172554;
+  --theme-grid-color: rgba(255, 255, 255, 0.15);
+  --theme-spotlight: rgba(56, 189, 248, 0.05);
+  --theme-card-bg: rgba(255, 255, 255, 0.02);
+  --theme-border: rgba(255, 255, 255, 0.05);
 }
 
 .light-theme {

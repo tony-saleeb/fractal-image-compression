@@ -66,7 +66,7 @@ const Background = memo(function Background() {
           className="absolute -top-1/4 -left-1/4 w-[80vw] h-[80vh] rounded-full blur-[120px] theme-transition will-change-transform"
           style={{ 
             backgroundColor: 'var(--theme-blob-1)', 
-            opacity: isDark ? 0.4 : 0.05,
+            opacity: isDark ? 0.15 : 0.05,
             backfaceVisibility: 'hidden',
           }}
         />
@@ -80,7 +80,7 @@ const Background = memo(function Background() {
           className="absolute top-1/4 -right-1/4 w-[70vw] h-[70vh] rounded-full blur-[100px] theme-transition will-change-transform"
           style={{ 
             backgroundColor: 'var(--theme-blob-2)', 
-            opacity: isDark ? 0.4 : 0.05,
+            opacity: isDark ? 0.15 : 0.05,
             backfaceVisibility: 'hidden',
           }}
         />
@@ -94,7 +94,7 @@ const Background = memo(function Background() {
           className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vh] rounded-full blur-[120px] theme-transition will-change-transform"
           style={{ 
             backgroundColor: 'var(--theme-blob-3)', 
-            opacity: isDark ? 0.4 : 0.05,
+            opacity: isDark ? 0.15 : 0.05,
             backfaceVisibility: 'hidden',
           }}
         />

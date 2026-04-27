@@ -20,6 +20,41 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
 import io
+import torchvision.models as models
+
+# ── FRACTAL SELF-SIMILARITY LOSS (TEXTURE / GRAM MATRIX) ────────
+class VGGFeatureExtractor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        vgg = models.vgg16(weights=models.VGG16_Weights.IMAGENET1K_V1).features
+        self.slice1 = nn.Sequential()
+        self.slice2 = nn.Sequential()
+        self.slice3 = nn.Sequential()
+        for x in range(4): self.slice1.add_module(str(x), vgg[x])
+        for x in range(4, 9): self.slice2.add_module(str(x), vgg[x])
+        for x in range(9, 16): self.slice3.add_module(str(x), vgg[x])
+        for param in self.parameters():
+            param.requires_grad = False
+            
+    def forward(self, x):
+        # Normalize for VGG
+        x = (x - torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(x.device)) / \
+            torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(x.device)
+        h = self.slice1(x)
+        h_relu1_2 = h
+        h = self.slice2(h)
+        h_relu2_2 = h
+        h = self.slice3(h)
+        h_relu3_3 = h
+        return h_relu1_2, h_relu2_2, h_relu3_3
+
+def gram_matrix(input):
+    N, C, H, W = input.size()
+    features = input.view(N, C, H * W)
+    # Compute the gram product using batch matrix multiplication
+    G = torch.bmm(features, features.transpose(1, 2))
+    # Normalize by the number of elements in the feature map
+    return G.div(C * H * W)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Device: {DEVICE}", flush=True)
@@ -133,9 +168,26 @@ def train():
 
     print(f"Batches/epoch: {len(train_loader)}", flush=True)
 
-    # Load pretrained Q2
-    model = fractalcompression_base(quality=2, pretrained=True).to(DEVICE)
-    print(f"\nModel: FractalCompression Q2", flush=True)
+    # Find existing finetuned model in Kaggle datasets
+    existing_model_path = None
+    if os.path.exists('/kaggle/input'):
+        import glob
+        pth_files = glob.glob('/kaggle/input/**/*.pth', recursive=True)
+        if pth_files:
+            existing_model_path = pth_files[0]
+
+    if existing_model_path:
+        print(f"\nModel: Loading YOUR existing fine-tuned weights from {existing_model_path}", flush=True)
+        model = fractalcompression_base(quality=2, pretrained=False).to(DEVICE)
+        state = torch.load(existing_model_path, map_location=DEVICE, weights_only=False)
+        if 'model_state_dict' in state:
+            model.load_state_dict(state['model_state_dict'], strict=False)
+        else:
+            model.load_state_dict(state, strict=False)
+    else:
+        print(f"\nModel: No existing model found. Downloading base CompressAI Q2 weights...", flush=True)
+        model = fractalcompression_base(quality=2, pretrained=True).to(DEVICE)
+        
     print(f"  Params: {sum(p.numel() for p in model.parameters()):,}", flush=True)
 
     main_params = [p for n, p in model.named_parameters()
@@ -158,10 +210,14 @@ def train():
 
     best_val_loss = float('inf')
     save_path = '/kaggle/working/finetuned_fractalcompression_q2.pth'
+    
+    # Initialize Self-Similarity Loss Extractor
+    vgg_ext = VGGFeatureExtractor().to(DEVICE)
+    vgg_ext.eval()
 
     for epoch in range(epochs):
         model.train()
-        t_loss = t_bpp = t_mse = 0
+        t_loss = t_bpp = t_mse = t_ss = 0
         t0 = time.time()
         for x in train_loader:
             x = x.to(DEVICE)
@@ -176,7 +232,20 @@ def train():
                 for lk in out["likelihoods"].values()
             )
             mse = F.mse_loss(out["x_hat"], x)
-            loss = lmbda * (255**2) * mse + bpp
+            
+            # Extract self-similar textures
+            orig_f1, orig_f2, orig_f3 = vgg_ext(x)
+            hat_f1, hat_f2, hat_f3 = vgg_ext(out["x_hat"])
+            
+            # Penalize destruction of self-similar textures (Fractal Loss)
+            ss_loss = F.mse_loss(gram_matrix(hat_f1), gram_matrix(orig_f1)) + \
+                      F.mse_loss(gram_matrix(hat_f2), gram_matrix(orig_f2)) + \
+                      F.mse_loss(gram_matrix(hat_f3), gram_matrix(orig_f3))
+            
+            # Combined Rate-Distortion-Texture loss
+            # We apply a 50.0 weight to the SS loss so it contributes around 0.1 - 0.5 to the total loss
+            fractal_weight = 50.0 
+            loss = bpp + lmbda * (255**2) * mse + fractal_weight * ss_loss
 
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -189,6 +258,7 @@ def train():
             t_loss += loss.item()
             t_bpp += bpp.item()
             t_mse += mse.item()
+            t_ss += ss_loss.item()
         nb = len(train_loader)
         elapsed = time.time() - t0
 
@@ -231,7 +301,7 @@ def train():
         ratio = 24.0 / max(avg_vbpp, 0.001)
         print(
             f"Ep {epoch+1:2d}/{epochs} | "
-            f"Loss: {t_loss/nb:.4f} | BPP: {t_bpp/nb:.4f} | "
+            f"Loss: {t_loss/nb:.4f} | BPP: {t_bpp/nb:.4f} | SS_Loss: {t_ss/nb:.4f} | "
             f"Val PSNR: {avg_vpsnr:.2f} dB | Val BPP: {avg_vbpp:.4f} | "
             f"Ratio: {ratio:.0f}:1 | {elapsed:.0f}s{tag}", flush=True)
 
