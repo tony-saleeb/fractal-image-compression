@@ -17,6 +17,8 @@ export interface CompressionResult {
 export interface DecompressionResult {
   imageBytes: Uint8Array;
   elapsedSeconds: number;
+  psnr?: number;
+  rmse?: number;
 }
 
 export type AppView = 'home' | 'loading' | 'result';

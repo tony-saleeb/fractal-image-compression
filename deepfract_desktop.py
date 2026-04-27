@@ -56,8 +56,11 @@ def api_decompress(path):
     return img, content, {
         'fic_size': fic_sz, 'output_size': len(content),
         'width': img.size[0], 'height': img.size[1],
+        'psnr': float(h.get('X-PSNR', h.get('x-psnr', '0'))),
+        'rmse': float(h.get('X-RMSE', h.get('x-rmse', '0'))),
         'time': float(h.get('X-Time', h.get('x-time', str(wall)))),
     }
+
 
 # ── Design Tokens ─────────────────────────────────────────────────
 C = {
@@ -471,8 +474,8 @@ class DeepFractApp(ctk.CTk):
                     self._card_lbl.configure(text=f"DECODED OUTPUT — {s['width']}×{s['height']} px")
                     self._stat("SIZE", human_size(s['output_size']))
                     self._stat("TIME", f"{s['time']:.1f}s")
-                    self._stat("PSNR", "—")
-                    self._stat("RMSE", "—")
+                    self._stat("PSNR", f"{s['psnr']:.1f}" if s['psnr'] > 0 else "N/A")
+                    self._stat("RMSE", f"{s['rmse']:.1f}" if s['rmse'] > 0 else "N/A")
                     self._btn_save.grid()
                 
                 self.after(0, finalize)

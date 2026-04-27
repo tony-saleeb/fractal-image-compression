@@ -86,8 +86,10 @@ export async function decompressFile(file: File): Promise<DecompressionResult> {
 
     const imageBytes = new Uint8Array(await res.arrayBuffer());
     const elapsed = parseFloat(res.headers.get('x-time') || '0');
+    const psnr = res.headers.has('x-psnr') ? parseFloat(res.headers.get('x-psnr')!) : undefined;
+    const rmse = res.headers.has('x-rmse') ? parseFloat(res.headers.get('x-rmse')!) : undefined;
 
-    return { imageBytes, elapsedSeconds: elapsed };
+    return { imageBytes, elapsedSeconds: elapsed, psnr, rmse };
   } catch (err: unknown) {
     clearTimeout(id);
     if (err instanceof DOMException && err.name === 'AbortError') {

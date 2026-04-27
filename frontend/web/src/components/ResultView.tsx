@@ -222,13 +222,13 @@ export default function ResultView({
               <SpecItem 
                icon={<Activity className="w-4 h-4" />} 
                label="PSNR" 
-               value={mode === 'compress' ? `${compressResult?.psnr?.toFixed(2) ?? '0'} dB` : 'N/A'} 
+               value={mode === 'compress' ? `${compressResult?.psnr?.toFixed(2) ?? '0'} dB` : decompressResult?.psnr ? `${decompressResult.psnr.toFixed(2)} dB` : 'N/A'} 
                isDark={isDark} 
               />
               <SpecItem 
                icon={<Activity className="w-4 h-4" />} 
                label="RMSE" 
-               value={mode === 'compress' ? `${compressResult?.rmse?.toFixed(2) ?? '0'}` : 'N/A'} 
+               value={mode === 'compress' ? `${compressResult?.rmse?.toFixed(2) ?? '0'}` : decompressResult?.rmse ? `${decompressResult.rmse.toFixed(2)}` : 'N/A'} 
                isDark={isDark} 
               />
             </div>
