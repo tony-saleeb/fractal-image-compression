@@ -26,11 +26,11 @@ const FloatingFractal = memo(function FloatingFractal({ id, size, x, y, delay }:
     >
       <div 
         className="absolute inset-0 border rounded-[30%_70%_70%_30%/30%_30%_70%_70%] pointer-events-none theme-transition"
-        style={{ borderWidth: '2px', borderColor: 'var(--theme-blob-1)' }}
+        style={{ borderWidth: '1px', borderColor: 'var(--theme-grid-color)' }}
       />
       <div 
         className="absolute inset-4 border rounded-[70%_30%_30%_70%/70%_70%_30%_30%] pointer-events-none theme-transition"
-        style={{ borderWidth: '1px', opacity: 0.5, borderColor: 'var(--theme-blob-2)' }}
+        style={{ borderWidth: '1px', opacity: 0.5, borderColor: 'var(--theme-grid-color)' }}
       />
     </motion.div>
   );
@@ -66,7 +66,7 @@ const Background = memo(function Background() {
           className="absolute -top-1/4 -left-1/4 w-[80vw] h-[80vh] rounded-full blur-[120px] theme-transition will-change-transform"
           style={{ 
             backgroundColor: 'var(--theme-blob-1)', 
-            opacity: isDark ? 0.15 : 0.05,
+            opacity: isDark ? 0.08 : 0.05,
             backfaceVisibility: 'hidden',
           }}
         />
@@ -80,7 +80,7 @@ const Background = memo(function Background() {
           className="absolute top-1/4 -right-1/4 w-[70vw] h-[70vh] rounded-full blur-[100px] theme-transition will-change-transform"
           style={{ 
             backgroundColor: 'var(--theme-blob-2)', 
-            opacity: isDark ? 0.15 : 0.05,
+            opacity: isDark ? 0.08 : 0.05,
             backfaceVisibility: 'hidden',
           }}
         />
@@ -94,7 +94,7 @@ const Background = memo(function Background() {
           className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vh] rounded-full blur-[120px] theme-transition will-change-transform"
           style={{ 
             backgroundColor: 'var(--theme-blob-3)', 
-            opacity: isDark ? 0.15 : 0.05,
+            opacity: isDark ? 0.08 : 0.05,
             backfaceVisibility: 'hidden',
           }}
         />
