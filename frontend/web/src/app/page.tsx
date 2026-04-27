@@ -13,6 +13,7 @@ import Header from '@/components/Header';
 import ModeSelector from '@/components/ModeSelector';
 import UploadBox from '@/components/UploadBox';
 import Footer from '@/components/Footer';
+import TutorialModal from '@/components/TutorialModal';
 
 /* ── Ambient Particles (Memoized to prevent re-renders) ────────────────── */
 
@@ -62,11 +63,27 @@ export default function Home() {
     reset,
   } = useCompressionStore();
 
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('deepfract_tutorial_seen');
+    if (!hasSeen) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleCloseTutorial = () => {
+    localStorage.setItem('deepfract_tutorial_seen', 'true');
+    setShowTutorial(false);
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
       <Background />
 
-      <Header />
+      {showTutorial && <TutorialModal onClose={handleCloseTutorial} />}
+
+      <Header onShowTutorial={() => setShowTutorial(true)} />
 
       <div className="relative z-10 flex flex-col grow">
         {/* ── Error Toast ────────────────────────────────────────────────────── */}

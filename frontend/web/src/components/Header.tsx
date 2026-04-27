@@ -6,7 +6,11 @@ import { Activity, Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import logoImg from '../../public/images/logo.png';
 
-const Header = React.memo(function Header() {
+interface HeaderProps {
+  onShowTutorial?: () => void;
+}
+
+const Header = React.memo(function Header({ onShowTutorial }: HeaderProps) {
   const { theme, toggleTheme, isDark } = useTheme();
 
   return (
@@ -61,6 +65,16 @@ const Header = React.memo(function Header() {
             )}
           </AnimatePresence>
         </button>
+
+        {onShowTutorial && (
+          <button 
+            onClick={onShowTutorial}
+            className="hidden sm:flex p-2 sm:px-4 sm:py-2.5 rounded-lg border theme-transition cursor-pointer hover:opacity-80 items-center gap-2" 
+            style={{ backgroundColor: 'var(--theme-card-bg)', borderColor: 'var(--theme-border)' }}
+          >
+            <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Tutorial</span>
+          </button>
+        )}
 
         <button className="p-2 sm:p-3 rounded-lg border theme-transition cursor-pointer hover:opacity-80" style={{ backgroundColor: 'var(--theme-card-bg)', borderColor: 'var(--theme-border)' }}>
           <User className="w-4 h-4 sm:w-5 sm:h-5" />
