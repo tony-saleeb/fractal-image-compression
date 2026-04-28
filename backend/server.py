@@ -61,12 +61,12 @@ DEVICE  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MAX_DIM = int(os.environ.get('FC_MAX_DIM', 1024))
 
 # ── CPU Performance Tuning ──────────────────────────────────────
-# Use physical cores (not hyperthreads) for optimal tensor throughput
-_cpu_count = os.cpu_count() or 4
-_optimal_threads = max(2, min(_cpu_count // 2, 8))
-torch.set_num_threads(_optimal_threads)
-torch.set_num_interop_threads(2)  # Parallelize independent ops
-torch.set_flush_denormal(True)
+# PyTorch naturally determines thread counts
+# _cpu_count = os.cpu_count() or 4
+# _optimal_threads = max(2, min(_cpu_count // 2, 8))
+# torch.set_num_threads(_optimal_threads)
+# torch.set_num_interop_threads(2)  
+# torch.set_flush_denormal(True)
 
 # ── Global enhancer & model ─────────────────────────────────────
 MODEL = None
@@ -157,9 +157,12 @@ def load_model():
     ckpt = torch.load(MODEL_PATH, map_location='cpu', weights_only=False)
     if isinstance(ckpt, dict):
         sd = ckpt.get('model_state_dict', ckpt.get('state_dict', ckpt))
-        print(f"  Epoch {ckpt.get('epoch','?')} | "
-              f"PSNR {ckpt.get('val_psnr','?'):.2f} dB | "
-              f"BPP {ckpt.get('val_bpp','?'):.4f}", flush=True)
+        epoch = ckpt.get('epoch', '?')
+        psnr = ckpt.get('val_psnr', '?')
+        bpp = ckpt.get('val_bpp', '?')
+        psnr_str = f"{psnr:.2f}" if isinstance(psnr, (int, float)) else str(psnr)
+        bpp_str = f"{bpp:.4f}" if isinstance(bpp, (int, float)) else str(bpp)
+        print(f"  Epoch {epoch} | PSNR {psnr_str} dB | BPP {bpp_str}", flush=True)
     else:
         sd = ckpt
 
@@ -176,6 +179,13 @@ def load_model():
     m.load_state_dict(sd, strict=False)
     m.eval().to(DEVICE)
     m.update()
+    
+    try:
+        print("  Compiling model with torch.compile for optimal CPU throughput...", flush=True)
+        m = torch.compile(m)
+    except Exception as e:
+        print(f"  [Warning] torch.compile not supported in this environment: {e}", flush=True)
+
     MODEL = m
     print("  Model ready.", flush=True)
 
