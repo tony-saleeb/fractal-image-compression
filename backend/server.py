@@ -61,12 +61,12 @@ DEVICE  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MAX_DIM = int(os.environ.get('FC_MAX_DIM', 1024))
 
 # ── CPU Performance Tuning ──────────────────────────────────────
-# PyTorch naturally determines thread counts
-# _cpu_count = os.cpu_count() or 4
-# _optimal_threads = max(2, min(_cpu_count // 2, 8))
-# torch.set_num_threads(_optimal_threads)
-# torch.set_num_interop_threads(2)  
-# torch.set_flush_denormal(True)
+# Use physical cores (not hyperthreads) for optimal tensor throughput
+_cpu_count = os.cpu_count() or 4
+_optimal_threads = max(2, min(_cpu_count // 2, 8))
+torch.set_num_threads(_optimal_threads)
+torch.set_num_interop_threads(2)  # Parallelize independent ops
+torch.set_flush_denormal(True)
 
 # ── Global enhancer & model ─────────────────────────────────────
 MODEL = None
@@ -179,13 +179,6 @@ def load_model():
     m.load_state_dict(sd, strict=False)
     m.eval().to(DEVICE)
     m.update()
-    
-    try:
-        print("  Compiling model with torch.compile for optimal CPU throughput...", flush=True)
-        m = torch.compile(m)
-    except Exception as e:
-        print(f"  [Warning] torch.compile not supported in this environment: {e}", flush=True)
-
     MODEL = m
     print("  Model ready.", flush=True)
 
