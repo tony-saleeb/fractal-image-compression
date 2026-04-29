@@ -75,8 +75,7 @@ class CompressionService {
       );
     } on SocketException catch (e) {
       throw CompressionException(
-        'Cannot connect to FractalCompression server at $_kBaseUrl.\n'
-        'Make sure server.py is running: py server.py',
+        'Cannot connect to FractalCompression server at $_kBaseUrl.\nDetails: $e',
         code: 'NETWORK_ERROR',
         originalError: e,
       );
