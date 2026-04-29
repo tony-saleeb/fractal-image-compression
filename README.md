@@ -4,7 +4,7 @@ DeepFract is a modern image compression architecture bridging classic mathematic
 
 ---
 
-## 🚀 Architecture Overview
+## Architecture Overview
 
 DeepFract operates as an optimal procedural pipeline:
 
@@ -14,14 +14,14 @@ DeepFract operates as an optimal procedural pipeline:
 
 ---
 
-## 📱 Technical Ecosystem
+## Technical Ecosystem
 
 - **Client Frontends:** Interactive dashboards constructed inside Next.js (Web) and Flutter (Cross-platform Mobile).
 - **Core APIs:** Python endpoints handling fast compute tasks securely.
 
 ---
 
-## 🛠️ Local Deployments
+## Local Deployments
 
 ### Server Configuration
 ```bash
