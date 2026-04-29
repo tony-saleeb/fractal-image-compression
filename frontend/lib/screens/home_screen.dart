@@ -329,26 +329,6 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                   Row(
                     children: [
                       const AnimatedThemeToggle(size: 24, padding: 8),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/profile'),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: (isDark ? Colors.white : Colors.black)
-                                .withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            Icons.person_4_outlined,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.6,
-                            ),
-                            size: 24,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ],
