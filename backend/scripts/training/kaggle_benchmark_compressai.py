@@ -82,7 +82,7 @@ def compress_jpeg2000(img, rate):
 # ── COMPRESSAI ─────────────────────────────────────────────────
 from compressai.zoo import cheng2020_anchor
 
-print("\\nLoading Cheng2020-anchor models (Q1-Q6)...", flush=True)
+print("\\nLoading Deep Neural models (Q1-Q6)...", flush=True)
 models = {}
 for q in [1, 2, 3, 4, 5, 6]:
     m = cheng2020_anchor(quality=q, pretrained=True)
@@ -180,7 +180,7 @@ print(f"\\n\\n{'='*72}", flush=True)
 print(f"  RATE-DISTORTION RESULTS (avg over {len(test_images)} images)", flush=True)
 print(f"{'='*72}", flush=True)
 
-print(f"\\n  Cheng2020-Anchor (Learned Compression):", flush=True)
+print(f"\\n  Learned Compression (Deep Neural Model):", flush=True)
 print(f"  {'Quality':>8} {'BPP':>8} {'PSNR':>8} {'Ratio':>8} {'Time':>8}", flush=True)
 print(f"  {'-'*44}", flush=True)
 for q in sorted(ca_r):
@@ -226,7 +226,7 @@ for q in [2, 3, 4]:
     j_bpp = np.mean(jpeg_r[best_jq]['bpp']) if jpeg_r[best_jq]['bpp'] else 0
     gain = ca_psnr - j_psnr
     print(f"\\n  At ~{ca_bpp:.2f} bpp ({3/ca_bpp:.0f}:1 ratio):", flush=True)
-    print(f"    Cheng2020 Q{q}: {ca_psnr:.2f} dB", flush=True)
+    print(f"    Learned Model Q{q}: {ca_psnr:.2f} dB", flush=True)
     print(f"    JPEG Q{best_jq}:      {j_psnr:.2f} dB (at {j_bpp:.2f} bpp)", flush=True)
     print(f"    Gain: +{gain:.2f} dB", flush=True)
 
