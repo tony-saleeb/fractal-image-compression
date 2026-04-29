@@ -22,6 +22,10 @@
     "kaggle",
     "LANCZOS",
     "nbytes",
-    "fromarray"
+    "fromarray",
+    "Quadtree",
+    "ResNet",
+    "UNet",
+    "CBAM"
   ]
 }
