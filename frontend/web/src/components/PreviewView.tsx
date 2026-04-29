@@ -20,7 +20,7 @@ export default function PreviewView() {
       exit={{ opacity: 0, y: -20, scale: 0.98 }}
       className="max-w-4xl mx-auto w-full px-2 sm:px-0"
     >
-      <div className={`relative overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-500 ${
+      <div className={`relative overflow-hidden rounded-4xl border shadow-2xl transition-all duration-500 ${
         isDark 
           ? 'bg-[#0f111a]/80 border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl' 
           : 'bg-white/90 border-blue-100 shadow-[0_30px_60px_-15px_rgba(0,120,255,0.15)] backdrop-blur-2xl'
@@ -34,7 +34,7 @@ export default function PreviewView() {
         <div className="relative z-10 flex flex-col md:flex-row p-6 sm:p-8 gap-8 items-center md:items-stretch">
           
           {/* ── Left Side: Neural Preview Window ── */}
-          <div className="w-full md:w-[45%] flex-shrink-0">
+          <div className="w-full md:w-[45%] shrink-0">
             <div className={`relative w-full aspect-video md:aspect-square rounded-3xl overflow-hidden group border ${
               isDark ? 'bg-black/60 border-white/5 shadow-inner shadow-white/5' : 'bg-gray-50/80 border-gray-200/60 shadow-inner shadow-black/5'
             }`}>

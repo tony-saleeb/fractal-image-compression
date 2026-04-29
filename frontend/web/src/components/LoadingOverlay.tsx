@@ -93,7 +93,7 @@ export default function LoadingOverlay({ isDecompress, isDark }: LoadingOverlayP
               transition={{ delay: i * 0.1, duration: 0.3 }}
               className="flex items-center gap-3"
             >
-              <div className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300 ${
+              <div className={`w-2 h-2 rounded-full shrink-0 transition-colors duration-300 ${
                 i < currentStep
                   ? 'bg-green-400'
                   : i === currentStep
@@ -116,7 +116,7 @@ export default function LoadingOverlay({ isDecompress, isDark }: LoadingOverlayP
           isDark ? 'bg-white/10' : 'bg-gray-200'
         }`}>
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
+            className="h-full bg-linear-to-r from-blue-600 to-blue-400 rounded-full"
             initial={{ width: '0%' }}
             animate={{ 
               width: `${((currentStep + 1) / steps.length) * 100}%`,

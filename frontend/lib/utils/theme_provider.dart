@@ -12,20 +12,6 @@ class ThemeProvider extends ChangeNotifier {
   ThemeProvider({bool initialDark = true})
       : _themeMode = initialDark ? ThemeMode.dark : ThemeMode.light;
 
-  Future<void> _loadThemeMode() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final isDark = prefs.getBool(_themeModeKey) ?? false;
-      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-      if (_mounted) {
-        notifyListeners();
-      }
-    } catch (e) {
-      // Fallback to light theme if there's an error
-      _themeMode = ThemeMode.light;
-    }
-  }
-
   Future<void> toggleTheme() async {
     _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     if (_mounted) {

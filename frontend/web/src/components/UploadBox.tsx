@@ -43,7 +43,7 @@ const UploadBox = React.memo(function UploadBox() {
           onDragLeave={() => setIsDragging(false)}
           onDrop={onDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`relative group h-full min-h-72 sm:min-h-[450px] rounded-3xl border-2 border-dashed transition-all cursor-pointer backdrop-blur-xl flex flex-col items-center justify-center p-6 sm:p-12 will-change-gpu ${
+          className={`relative group h-full min-h-72 sm:min-h-112.5 rounded-3xl border-2 border-dashed transition-all cursor-pointer backdrop-blur-xl flex flex-col items-center justify-center p-6 sm:p-12 will-change-gpu ${
             isDragging
               ? 'border-blue-500 bg-blue-500/10'
               : 'border-current opacity-60 hover:opacity-100 hover:border-blue-500/40 bg-white/5'

@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import '../utils/theme.dart';
 import '../utils/constants.dart';
 
 class CompressionLoadingOverlay extends StatefulWidget {

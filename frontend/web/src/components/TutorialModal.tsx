@@ -70,7 +70,7 @@ export default function TutorialModal({ onClose }: TutorialModalProps) {
           <X className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
         </button>
 
-        <div className="min-h-[250px] flex flex-col items-center justify-center text-center mt-4">
+        <div className="min-h-62.5 flex flex-col items-center justify-center text-center mt-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
