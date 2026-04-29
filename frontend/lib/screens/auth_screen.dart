@@ -117,7 +117,7 @@ class _AuthScreenState extends State<AuthScreen>
                     Container(
                       width: 80, height: 80,
                       decoration: BoxDecoration(
-                        gradient: AppTheme.premiumGradient,
+                        gradient: AppTheme.premiumGradient(isDark),
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
@@ -135,7 +135,7 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
                     const SizedBox(height: 24),
                     ShaderMask(
-                      shaderCallback: (bounds) => AppTheme.premiumGradient.createShader(bounds),
+                      shaderCallback: (bounds) => AppTheme.premiumGradient(isDark).createShader(bounds),
                       child: Text(
                         'DeepFract',
                         style: theme.textTheme.displaySmall?.copyWith(

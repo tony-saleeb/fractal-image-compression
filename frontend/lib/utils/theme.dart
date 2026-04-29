@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // --- Apple-inspired Minimal Color Palette ---
-  static const Color primaryColor = Color(0xFF007AFF); // San Francisco Blue
-  static const Color secondaryColor = Color(0xFF5856D6); // Deep Iris
-  static const Color lightBackground = Color(0xFFFBFBFD); // Off-white
-  static const Color darkBackground = Color(0xFF000000); // True Black
+  // --- Custom DeepFract Color Palette ---
+  // Shared
+  static const Color primaryBlue = Color(0xFF3B82F6);
   
-  static const Color lightSurface = Colors.white;
-  static const Color darkSurface = Color(0xFF1C1C1E); // Elevated Dark
+  // Light Theme (Blues & White)
+  static const Color lightBackground = Color(0xFFFFFFFF);
+  static const Color lightSurface = Color(0xFFF4F8FD); // Very light blue tint
+  static const Color lightPrimary = Color(0xFF005BB5); // Strong deep blue
+  static const Color lightSecondary = Color(0xFF007AFF); // Bright blue
   
-  static const Color accentIndigo = Color(0xFF5E5CE6);
+  // Dark Theme (Blues & Blacks)
+  static const Color darkBackground = Color(0xFF020617); // Ultra dark blue/black
+  static const Color darkSurface = Color(0xFF0F172A); // Deep slate blue
+  static const Color darkPrimary = Color(0xFF3B82F6); // Bright blue
+  static const Color darkSecondary = Color(0xFF60A5FA); // Lighter blue
+
   static const Color glassWhite = Color(0x99FFFFFF);
   static const Color glassBlack = Color(0x66000000);
 
@@ -31,21 +37,23 @@ class AppTheme {
     );
   }
 
-  static LinearGradient premiumGradient = const LinearGradient(
-    colors: [primaryColor, secondaryColor],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  static LinearGradient premiumGradient(bool isDark) {
+    return LinearGradient(
+      colors: isDark ? [darkPrimary, darkSecondary] : [lightPrimary, lightSecondary],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.light(
-        primary: primaryColor,
-        secondary: secondaryColor,
+        primary: lightPrimary,
+        secondary: lightSecondary,
         surface: lightSurface,
-        onSurface: Colors.black,
-        primaryContainer: primaryColor.withValues(alpha: 0.1),
+        onSurface: Color(0xFF001E3C), // Deep blue-black for text
+        primaryContainer: lightPrimary.withValues(alpha: 0.1),
       ),
       scaffoldBackgroundColor: lightBackground,
       textTheme: GoogleFonts.plusJakartaSansTextTheme().copyWith(
@@ -70,7 +78,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: lightPrimary,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
@@ -89,11 +97,11 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.dark(
-        primary: primaryColor,
-        secondary: secondaryColor,
+        primary: darkPrimary,
+        secondary: darkSecondary,
         surface: darkSurface,
-        onSurface: Colors.white,
-        primaryContainer: Colors.white.withValues(alpha: 0.05),
+        onSurface: Color(0xFFE2E8F0), // Off-white with slight blue tint
+        primaryContainer: darkPrimary.withValues(alpha: 0.1),
       ),
       scaffoldBackgroundColor: darkBackground,
       textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme).copyWith(
@@ -118,8 +126,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: darkPrimary,
+          foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

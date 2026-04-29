@@ -133,7 +133,7 @@ class ProfileScreen extends StatelessWidget {
 
           // Username with Gradient
           ShaderMask(
-            shaderCallback: (bounds) => AppTheme.premiumGradient.createShader(bounds),
+            shaderCallback: (bounds) => AppTheme.premiumGradient(isDark).createShader(bounds),
             child: Text(
               user?.displayName ?? 'DeepFract User',
               style: const TextStyle(

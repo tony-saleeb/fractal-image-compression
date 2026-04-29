@@ -302,7 +302,7 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                         children: [
                           ShaderMask(
                             shaderCallback:
-                                (bounds) => AppTheme.premiumGradient
+                                (bounds) => AppTheme.premiumGradient(isDark)
                                     .createShader(bounds),
                             child: Text(
                               AppConstants.appName,

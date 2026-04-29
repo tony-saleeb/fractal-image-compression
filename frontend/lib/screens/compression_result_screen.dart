@@ -161,13 +161,14 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
 
   Widget _buildModernHeader(BuildContext context, {bool isCenter = false}) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Column(
       crossAxisAlignment:
           isCenter ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
         ShaderMask(
           shaderCallback:
-              (bounds) => AppTheme.premiumGradient.createShader(bounds),
+              (bounds) => AppTheme.premiumGradient(isDark).createShader(bounds),
           child: Text(
             'Processing Complete',
             style: theme.textTheme.displaySmall?.copyWith(
