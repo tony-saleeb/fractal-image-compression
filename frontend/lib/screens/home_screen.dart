@@ -403,7 +403,7 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                       subtitle: 'FIC TO IMAGE',
                       description:
                           'Neural reconstruction with super-resolution.',
-                      gradientColors: [secondary, AppTheme.accentIndigo],
+                      gradientColors: [secondary, primary],
                       isDark: isDark,
                       isLoading: isProcessing,
                       onTap: isProcessing ? null : _handleDecompress,

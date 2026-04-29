@@ -121,7 +121,7 @@ class _AuthScreenState extends State<AuthScreen>
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                            color: AppTheme.primaryBlue.withValues(alpha: 0.3),
                             blurRadius: 25, spreadRadius: 1,
                           )],
                       ),
