@@ -1,6 +1,6 @@
 # DeepFract: AI-Enhanced Fractal Image Compression
 
-![DeepFract Logo](frontend/assets/images/logo.png)
+<img src="frontend/assets/images/logo.png" width="200" alt="DeepFract Logo" />
 
 DeepFract is an advanced image compression architecture bridging classic mathematical self-similarity principles with deep-learning synthesis logic gracefully.
 
