@@ -15,6 +15,9 @@
     "compressai",
     "fractalcompression",
     "Fract",
-    "MVVM"
+    "MVVM",
+    "prefs",
+    "rmse",
+    "bitstream"
   ]
 }
