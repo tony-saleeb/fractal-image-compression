@@ -159,11 +159,14 @@ class CompressionService {
   /// Health-check the server.  Returns true if running.
   Future<bool> isServerRunning() async {
     try {
+      debugPrint('[CompressionService] Checking health at $_kBaseUrl/health');
       final res = await http
           .get(Uri.parse('$_kBaseUrl/health'))
           .timeout(const Duration(seconds: 10));
+      debugPrint('[CompressionService] Health status code: ${res.statusCode}');
       return res.statusCode == 200;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[CompressionService] Health check failed with exception: $e');
       return false;
     }
   }

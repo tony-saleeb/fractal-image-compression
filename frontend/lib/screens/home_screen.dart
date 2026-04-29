@@ -45,11 +45,15 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
     if (result == null || result.files.isEmpty || !mounted) return;
 
     final picked = result.files.first;
+    debugPrint('[MobileHome] File picked path: ${picked.path}');
     final File imageFile = File(picked.path!);
     final Uint8List imageBytes = picked.bytes ?? await imageFile.readAsBytes();
+    debugPrint('[MobileHome] File loaded, bytes length: ${imageBytes.length}');
 
     final ok = await controller.checkServerStatus();
+    debugPrint('[MobileHome] Server check result: $ok');
     if (!ok && mounted) {
+      debugPrint('[MobileHome] Server offline - stopping');
       _showServerError();
       return;
     }
