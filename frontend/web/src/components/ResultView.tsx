@@ -219,22 +219,7 @@ export default function ResultView({
                 value={formatBytes(mode === 'compress' ? (compressResult?.originalSize ?? 0) : (decompressResult?.imageBytes?.length ?? 0))} 
                 isDark={isDark} 
               />
-              {mode !== 'compress' && (
-                <>
-                  <SpecItem 
-                   icon={<Activity className="w-4 h-4" />} 
-                   label="PSNR" 
-                   value={decompressResult?.psnr ? `${decompressResult.psnr.toFixed(2)} dB` : 'N/A'} 
-                   isDark={isDark} 
-                  />
-                  <SpecItem 
-                   icon={<Activity className="w-4 h-4" />} 
-                   label="RMSE" 
-                   value={decompressResult?.rmse ? `${decompressResult.rmse.toFixed(2)}` : 'N/A'} 
-                   isDark={isDark} 
-                  />
-                </>
-              )}
+
             </div>
           </div>
           
