@@ -295,14 +295,6 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                     children: [
                       Row(
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            padding: const EdgeInsets.all(8),
-                            decoration: AppTheme.glassDecoration(isDark: isDark, opacity: 0.1),
-                            child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
-                          ),
-                          const SizedBox(width: 16),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
