@@ -295,6 +295,13 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                     children: [
                       Row(
                         children: [
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
