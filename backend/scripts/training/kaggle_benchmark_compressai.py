@@ -47,19 +47,15 @@ def compute_psnr(orig, recon):
 def compute_bpp(nbytes, w, h):
     return (nbytes * 8) / (w * h)
 
+# Classical baseline compression (JPEG)
 def compress_jpeg(img, quality):
     buf = io.BytesIO()
     img.save(buf, format='JPEG', quality=quality)
     return buf.tell(), Image.open(buf).copy()
 
-def compress_jpeg2000(img, rate):
-    buf = io.BytesIO()
-    img.save(buf, format='JPEG2000', quality_mode='rates', quality_layers=[rate])
-    return buf.tell(), Image.open(buf).copy()
-
 from compressai.zoo import cheng2020_anchor
 
-print("\\nLoading Deep Learning Models...", flush=True)
+print("\\nLoading Neural Models...", flush=True)
 models = {}
 for q in [1, 2, 3, 4, 5, 6]:
     m = cheng2020_anchor(quality=q, pretrained=True)
@@ -67,6 +63,7 @@ for q in [1, 2, 3, 4, 5, 6]:
     m.update()
     models[q] = m
 
+# Neural Fractal Compression
 def compress_neural_model(model, img):
     w, h = img.size
     pw = (64 - w % 64) % 64
@@ -91,7 +88,6 @@ def compress_neural_model(model, img):
 
 ca_results = {q: {'bpp':[], 'psnr':[], 'time':[]} for q in models}
 jpeg_results = {q: {'bpp':[], 'psnr':[]} for q in [10, 30, 50, 75, 95]}
-jp2_results = {q: {'bpp':[], 'psnr':[]} for q in [5, 10, 20, 40, 80]}
 
 os.makedirs('/kaggle/working/results', exist_ok=True)
 
@@ -100,6 +96,7 @@ for idx, path in enumerate(test_images):
     img = Image.open(path).convert('RGB').resize((512, 512), Image.LANCZOS)
     w, h = img.size
 
+    # Neural Fractal Compression Evaluation
     for q, m in models.items():
         try:
             bpp, nb, rec, dt = compress_neural_model(m, img)
@@ -113,19 +110,12 @@ for idx, path in enumerate(test_images):
         except Exception:
             pass
 
+    # Classical Baseline Evaluation
     for q in [10, 30, 50, 75, 95]:
         try:
             nb, rec = compress_jpeg(img, q)
             jpeg_results[q]['bpp'].append(compute_bpp(nb, w, h))
             jpeg_results[q]['psnr'].append(compute_psnr(img, rec))
-        except Exception:
-            pass
-
-    for q in [5, 10, 20, 40, 80]:
-        try:
-            nb, rec = compress_jpeg2000(img, q)
-            jp2_results[q]['bpp'].append(compute_bpp(nb, w, h))
-            jp2_results[q]['psnr'].append(compute_psnr(img, rec))
         except Exception:
             pass
 
@@ -142,7 +132,6 @@ print(f"\\n{'='*40}")
 data = {
     'compressai': {str(q): {'bpp': d['bpp'], 'psnr': d['psnr']} for q, d in ca_results.items()},
     'jpeg':       {str(q): {'bpp': d['bpp'], 'psnr': d['psnr']} for q, d in jpeg_results.items()},
-    'jpeg2000':   {str(q): {'bpp': d['bpp'], 'psnr': d['psnr']} for q, d in jp2_results.items()},
 }
 with open('/kaggle/working/results/benchmark_data.json', 'w') as f:
     json.dump(data, f, indent=2)
