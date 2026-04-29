@@ -18,6 +18,10 @@
     "MVVM",
     "prefs",
     "rmse",
-    "bitstream"
+    "bitstream",
+    "kaggle",
+    "LANCZOS",
+    "nbytes",
+    "fromarray"
   ]
 }
