@@ -49,7 +49,10 @@ export default function PreviewView() {
 
               {mode === 'compress' && originalPreviewUrl ? (
                 <>
-                  <img 
+                  <motion.img 
+                    initial={{ opacity: 0, filter: 'blur(10px)', scale: 1.05 }}
+                    animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     src={originalPreviewUrl} 
                     alt="Preview" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -121,11 +124,11 @@ export default function PreviewView() {
               
               <button
                 onClick={confirmProcessing}
-                className="flex-[2] py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] group bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/25 border border-blue-400/20"
+                className="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] group bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/25 border border-blue-400/20"
               >
-                <Sparkles className="w-4 h-4" />
-                <span>continue compression</span>
-                <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+                <Sparkles className="w-4 h-4 shrink-0" />
+                <span className="truncate">Continue Compression</span>
+                <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform shrink-0" />
               </button>
             </div>
 
