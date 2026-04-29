@@ -246,7 +246,7 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Backend server not running.\nRun: py server.py',
+                'Cloud backend is offline or unreachable.\nPlease try again or check connection.',
                 style: TextStyle(color: Colors.white),
               ),
             ),

@@ -161,7 +161,7 @@ class CompressionService {
     try {
       final res = await http
           .get(Uri.parse('$_kBaseUrl/health'))
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 10));
       return res.statusCode == 200;
     } catch (_) {
       return false;
