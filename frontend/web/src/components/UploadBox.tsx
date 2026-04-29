@@ -8,17 +8,13 @@ import { useTheme } from '@/context/ThemeContext';
 
 const UploadBox = React.memo(function UploadBox() {
   const { isDark } = useTheme();
-  const { mode, tier, setTier, handleCompress, handleDecompress } = useCompressionStore();
+  const { mode, tier, setTier, previewFile } = useCompressionStore();
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onFileSelected = useCallback((file: File) => {
-    if (mode === 'compress') {
-      handleCompress(file);
-    } else {
-      handleDecompress(file);
-    }
-  }, [mode, handleCompress, handleDecompress]);
+    previewFile(file);
+  }, [previewFile]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();

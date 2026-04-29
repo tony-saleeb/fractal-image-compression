@@ -21,7 +21,7 @@ export interface DecompressionResult {
   rmse?: number;
 }
 
-export type AppView = 'home' | 'loading' | 'result';
+export type AppView = 'home' | 'preview' | 'loading' | 'result';
 
 export interface ProcessingState {
   isProcessing: boolean;

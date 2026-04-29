@@ -14,6 +14,7 @@ import ModeSelector from '@/components/ModeSelector';
 import UploadBox from '@/components/UploadBox';
 import Footer from '@/components/Footer';
 import TutorialModal from '@/components/TutorialModal';
+import PreviewView from '@/components/PreviewView';
 
 /* ── Ambient Particles (Memoized to prevent re-renders) ────────────────── */
 
@@ -126,6 +127,8 @@ export default function Home() {
                   isDark={isDark}
                   onReset={reset}
                 />
+              ) : currentView === 'preview' ? (
+                <PreviewView key="preview" />
               ) : (
                 <motion.div
                   key="home"

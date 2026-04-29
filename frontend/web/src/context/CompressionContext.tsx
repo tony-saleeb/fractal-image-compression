@@ -7,7 +7,8 @@ import { compressImage, decompressFile, checkHealth } from '@/lib/api';
 type Action =
   | { type: 'SET_MODE'; mode: CompressionMode }
   | { type: 'SET_TIER'; tier: number }
-  | { type: 'START_PROCESSING'; file: File; previewUrl: string | null }
+  | { type: 'PREVIEW_FILE'; file: File; previewUrl: string | null }
+  | { type: 'START_PROCESSING' }
   | { type: 'FINISH_COMPRESSION'; result: CompressionResult }
   | { type: 'FINISH_DECOMPRESSION'; result: DecompressionResult }
   | { type: 'SET_ERROR'; error: string | null }
@@ -20,6 +21,8 @@ interface CompressionContextType extends ProcessingState {
   setError: (error: string | null) => void;
   handleCompress: (file: File) => Promise<void>;
   handleDecompress: (file: File) => Promise<void>;
+  previewFile: (file: File) => void;
+  confirmProcessing: () => Promise<void>;
   reset: () => void;
 }
 
@@ -41,13 +44,19 @@ function compressionReducer(state: ProcessingState, action: Action): ProcessingS
       return { ...state, mode: state.mode === action.mode ? state.mode : action.mode };
     case 'SET_TIER':
       return { ...state, tier: action.tier };
+    case 'PREVIEW_FILE':
+      return {
+        ...state,
+        error: null,
+        originalFile: action.file,
+        originalPreviewUrl: action.previewUrl,
+        currentView: 'preview'
+      };
     case 'START_PROCESSING':
       return { 
         ...state, 
         isProcessing: true, 
         error: null, 
-        originalFile: action.file, 
-        originalPreviewUrl: action.previewUrl, 
         currentView: 'loading' 
       };
     case 'FINISH_COMPRESSION':
@@ -95,8 +104,7 @@ export function CompressionProvider({ children }: { children: React.ReactNode })
     if (processingRef.current) return;
     processingRef.current = true;
     
-    const previewUrl = URL.createObjectURL(file);
-    dispatch({ type: 'START_PROCESSING', file, previewUrl });
+    dispatch({ type: 'START_PROCESSING' });
 
     try {
       const ok = await checkHealth();
@@ -115,7 +123,7 @@ export function CompressionProvider({ children }: { children: React.ReactNode })
     if (processingRef.current) return;
     processingRef.current = true;
 
-    dispatch({ type: 'START_PROCESSING', file, previewUrl: null });
+    dispatch({ type: 'START_PROCESSING' });
 
     try {
       const ok = await checkHealth();
@@ -130,6 +138,20 @@ export function CompressionProvider({ children }: { children: React.ReactNode })
     }
   }, [setError]);
 
+  const previewFile = useCallback((file: File) => {
+    const previewUrl = state.mode === 'compress' ? URL.createObjectURL(file) : null;
+    dispatch({ type: 'PREVIEW_FILE', file, previewUrl });
+  }, [state.mode]);
+
+  const confirmProcessing = useCallback(async () => {
+    if (!state.originalFile) return;
+    if (state.mode === 'compress') {
+      await handleCompress(state.originalFile);
+    } else {
+      await handleDecompress(state.originalFile);
+    }
+  }, [state.originalFile, state.mode, handleCompress, handleDecompress]);
+
   const value = useMemo(() => ({
     ...state,
     setMode,
@@ -137,8 +159,10 @@ export function CompressionProvider({ children }: { children: React.ReactNode })
     setError,
     handleCompress,
     handleDecompress,
+    previewFile,
+    confirmProcessing,
     reset,
-  }), [state, setMode, setTier, setError, handleCompress, handleDecompress, reset]);
+  }), [state, setMode, setTier, setError, handleCompress, handleDecompress, previewFile, confirmProcessing, reset]);
 
   return <CompressionContext.Provider value={value}>{children}</CompressionContext.Provider>;
 }
