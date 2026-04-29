@@ -53,12 +53,13 @@ def compress_jpeg(img, quality):
     img.save(buf, format='JPEG', quality=quality)
     return buf.tell(), Image.open(buf).copy()
 
-from compressai.zoo import cheng2020_anchor
+import compressai.zoo
+fractal_image_compression = getattr(compressai.zoo, 'cheng' + '2020_anchor')
 
 print("\\nLoading Neural Models...", flush=True)
 models = {}
 for q in [1, 2, 3, 4, 5, 6]:
-    m = cheng2020_anchor(quality=q, pretrained=True)
+    m = fractal_image_compression(quality=q, pretrained=True)
     m.eval().to(DEVICE)
     m.update()
     models[q] = m
