@@ -10,13 +10,13 @@ const STEPS = [
   'Computing latent representation…',
   'Applying channel sparsity filter…',
   'Encoding with learned entropy…',
-  'Optimizing bitstream…',
+  'Optimizing bit stream…',
   'Finalizing output…',
 ];
 
 const DECOMPRESS_STEPS = [
   'Initializing neural decoder…',
-  'Parsing .fic bitstream…',
+  'Parsing .fic bit stream…',
   'Decoding latent channels…',
   'Running synthesis transform…',
   'Applying super-resolution…',

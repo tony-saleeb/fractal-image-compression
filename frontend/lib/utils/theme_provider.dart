@@ -19,8 +19,8 @@ class ThemeProvider extends ChangeNotifier {
     }
     
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_themeModeKey, _themeMode == ThemeMode.dark);
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_themeModeKey, _themeMode == ThemeMode.dark);
     } catch (e) {
       // Ignore storage errors
     }
@@ -33,8 +33,8 @@ class ThemeProvider extends ChangeNotifier {
     }
     
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_themeModeKey, mode == ThemeMode.dark);
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_themeModeKey, mode == ThemeMode.dark);
     } catch (e) {
       // Ignore storage errors
     }

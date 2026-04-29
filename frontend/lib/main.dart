@@ -22,8 +22,8 @@ Future<void> main() async {
   }
 
   // Load saved theme before building app so splash gets the right theme
-  final prefs = await SharedPreferences.getInstance();
-  final savedDark = prefs.getBool('theme_mode') ?? true; // default dark
+  final preferences = await SharedPreferences.getInstance();
+  final savedDark = preferences.getBool('theme_mode') ?? true; // default dark
 
   // Make system bars transparent
   SystemChrome.setSystemUIOverlayStyle(
