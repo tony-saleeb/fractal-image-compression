@@ -50,13 +50,13 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
     final Uint8List imageBytes = picked.bytes ?? await imageFile.readAsBytes();
     debugPrint('[MobileHome] File loaded, bytes length: ${imageBytes.length}');
 
-    final ok = await controller.checkServerStatus();
-    debugPrint('[MobileHome] Server check result: $ok');
-    if (!ok && mounted) {
-      debugPrint('[MobileHome] Server offline - stopping');
-      _showServerError();
-      return;
-    }
+    // final ok = await controller.checkServerStatus();
+    // debugPrint('[MobileHome] Server check result: $ok');
+    // if (!ok && mounted) {
+    //   debugPrint('[MobileHome] Server offline - stopping');
+    //   _showServerError();
+    //   return;
+    // }
 
     try {
       final completer = Completer<void>();
@@ -163,11 +163,11 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
         picked.bytes ?? await File(picked.path!).readAsBytes();
     final int ficSize = ficBytes.length;
 
-    final ok = await controller.checkServerStatus();
-    if (!ok && mounted) {
-      _showServerError();
-      return;
-    }
+    // final ok = await controller.checkServerStatus();
+    // if (!ok && mounted) {
+    //   _showServerError();
+    //   return;
+    // }
 
     try {
       final completer = Completer<void>();
