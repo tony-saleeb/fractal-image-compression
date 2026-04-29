@@ -1,24 +1,10 @@
-"""
-DeepFract Thesis Benchmark Suite
-=================================
-This script benchmarks compression tools (Deep Neural Models, JPEG, and JPEG 2000).
-
-Note for Professor:
-To avoid library conflicts inside our cloud environments (like Kaggle), 
-this script safely generates and executes the evaluation logic in an isolated container.
-"""
-
 import subprocess
 import sys
 import os
 
-# Install standard compression dependencies quietly
 print("Initializing required libraries...", flush=True)
 subprocess.run([sys.executable, '-m', 'pip', 'install', 'compressai==1.2.4', '-q'], check=True)
 
-# -------------------------------------------------------------------
-# Core Benchmark Logic (Runs in an isolated space)
-# -------------------------------------------------------------------
 BENCHMARK_LOGIC = '''
 import os, sys, glob, io, time, random, json, math
 import numpy as np
@@ -29,7 +15,6 @@ import torch.nn.functional as F
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Executing on hardware: {DEVICE}", flush=True)
 
-# 1. Fetch random test samples from the evaluation set
 print("\\nLocating test sample directories...", flush=True)
 all_imgs = []
 for ext in ['*.jpg','*.jpeg','*.png','*.bmp','*.PNG','*.JPG','*.JPEG']:
@@ -50,7 +35,6 @@ random.shuffle(valid_images)
 test_images = valid_images[:24]
 print(f"Selected {len(test_images)} valid benchmark samples.", flush=True)
 
-# 2. Mathematical formulas for evaluation
 def compute_psnr(orig, recon):
     a = np.array(orig.convert('RGB'), dtype=np.float32)
     b = np.array(recon.convert('RGB'), dtype=np.float32)
@@ -63,7 +47,6 @@ def compute_psnr(orig, recon):
 def compute_bpp(nbytes, w, h):
     return (nbytes * 8) / (w * h)
 
-# 3. Traditional Codec implementations
 def compress_jpeg(img, quality):
     buf = io.BytesIO()
     img.save(buf, format='JPEG', quality=quality)
@@ -74,7 +57,6 @@ def compress_jpeg2000(img, rate):
     img.save(buf, format='JPEG2000', quality_mode='rates', quality_layers=[rate])
     return buf.tell(), Image.open(buf).copy()
 
-# 4. Learned Neural Model integration
 from compressai.zoo import cheng2020_anchor
 
 print("\\nLoading Deep Learning Models...", flush=True)
@@ -107,7 +89,6 @@ def compress_neural_model(model, img):
     arr = (xh.squeeze(0).permute(1,2,0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8)
     return compute_bpp(total_bytes, w, h), total_bytes, Image.fromarray(arr), dt
 
-# 5. Process Benchmarks
 ca_results = {q: {'bpp':[], 'psnr':[], 'time':[]} for q in models}
 jpeg_results = {q: {'bpp':[], 'psnr':[]} for q in [10, 30, 50, 75, 95]}
 jp2_results = {q: {'bpp':[], 'psnr':[]} for q in [5, 10, 20, 40, 80]}
@@ -119,7 +100,6 @@ for idx, path in enumerate(test_images):
     img = Image.open(path).convert('RGB').resize((512, 512), Image.LANCZOS)
     w, h = img.size
 
-    # Evaluate Deep Neural Model
     for q, m in models.items():
         try:
             bpp, nb, rec, dt = compress_neural_model(m, img)
@@ -133,7 +113,6 @@ for idx, path in enumerate(test_images):
         except Exception:
             pass
 
-    # Evaluate JPEG
     for q in [10, 30, 50, 75, 95]:
         try:
             nb, rec = compress_jpeg(img, q)
@@ -142,7 +121,6 @@ for idx, path in enumerate(test_images):
         except Exception:
             pass
 
-    # Evaluate JPEG2000
     for q in [5, 10, 20, 40, 80]:
         try:
             nb, rec = compress_jpeg2000(img, q)
@@ -151,7 +129,6 @@ for idx, path in enumerate(test_images):
         except Exception:
             pass
 
-# 6. Tabulate Results
 print(f"\\n{'='*40}")
 print(f"  FINAL RATE-DISTORTION RESULTS")
 print(f"{'='*40}")
@@ -171,7 +148,6 @@ with open('/kaggle/working/results/benchmark_data.json', 'w') as f:
     json.dump(data, f, indent=2)
 '''
 
-# Step 3: Write isolated file and start evaluation
 script_path = '/kaggle/working/_benchmark.py'
 with open(script_path, 'w') as f:
     f.write(BENCHMARK_LOGIC)
