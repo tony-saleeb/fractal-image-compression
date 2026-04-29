@@ -124,7 +124,7 @@ export default function PreviewView() {
                 className="flex-[2] py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] group bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/25 border border-blue-400/20"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>Continue Compression</span>
+                <span>continue compression</span>
                 <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
