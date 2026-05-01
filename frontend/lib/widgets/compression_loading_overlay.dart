@@ -119,8 +119,8 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
   @override
   void dispose() {
     debugPrint('[Overlay] Disposing controller resources');
-    _mainController.status == AnimationStatus.dismissed ? null : _mainController.stop();
-    _pulseController.status == AnimationStatus.dismissed ? null : _pulseController.stop();
+    _mainController.stop();
+    _pulseController.stop();
     _mainController.dispose();
     _pulseController.dispose();
     super.dispose();

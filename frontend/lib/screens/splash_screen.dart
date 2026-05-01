@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:math' as math;
 import '../core/constants/app_durations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/auth_service.dart';
 import '../utils/constants.dart';
 import '../utils/routes.dart';
 
@@ -21,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _rotationAnimation;
-  final _authService = AuthService();
 
   @override
   void initState() {
@@ -62,6 +58,18 @@ class _SplashScreenState extends State<SplashScreen>
     _navigateToNextScreen();
   }
 
+  bool _imagesPrecached = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_imagesPrecached) {
+      _imagesPrecached = true;
+      precacheImage(const AssetImage(AppConstants.logoPath), context);
+      precacheImage(const AssetImage(AppConstants.logooPath), context);
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -70,37 +78,13 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateToNextScreen() async {
-    // Start auth check while splash is showing
-    final authCheckFuture = Future.value(_authService.isLoggedIn);
-    final prefsFuture = SharedPreferences.getInstance();
-
     // Wait for the minimal splash duration
     await Future.delayed(AppDurations.splashDelay);
 
-    final results = await Future.wait([authCheckFuture, prefsFuture]);
-    final bool isLoggedIn = results[0] as bool;
-    final SharedPreferences prefs = results[1] as SharedPreferences;
-
     if (!mounted) return;
 
-    // 1. Check if user is logged in -> Go Home
-    if (isLoggedIn) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-      return;
-    }
-
-    // 2. Check onboarding status for mobile
-    if (!kIsWeb) {
-      final bool onboardingComplete =
-          prefs.getBool(AppConstants.onboardingCompleteKey) ?? false;
-      if (!onboardingComplete) {
-        Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
-        return;
-      }
-    }
-
-    // 3. Otherwise, go to Auth screen
-    Navigator.pushReplacementNamed(context, AppRoutes.auth);
+    // Always show onboarding on every app launch
+    Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
   }
 
   @override

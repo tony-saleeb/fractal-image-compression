@@ -25,6 +25,11 @@ const String _kBaseUrl = 'https://tony-saleeb-deepfract-api.hf.space';
 ///   py server.py   (in c:\Users\TONY\Development\fractal)
 ///
 class CompressionService {
+  static final CompressionService _instance = CompressionService._internal();
+  factory CompressionService() => _instance;
+
+  CompressionService._internal();
+
   /// Compress [imageFile] (mobile) or [imageBytes] + [filename] (web/bytes).
   /// Returns [CompressionResult] with sizes, ratio, and the raw .fic bytes.
   Future<CompressionResult> compressImage({

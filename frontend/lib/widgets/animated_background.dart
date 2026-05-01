@@ -42,43 +42,45 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
     // Base background color
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return Stack(
-      children: [
-        // Solid background
-        Container(color: backgroundColor),
+    return RepaintBoundary(
+      child: Stack(
+        children: [
+          // Solid background
+          Container(color: backgroundColor),
 
-        // Animated bubbles
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return CustomPaint(
-              painter: BubblePainter(
-                bubbles: _bubbles,
-                controllerValue: _controller.value,
-                primaryColor: colorScheme.primary,
-                secondaryColor: colorScheme.secondary,
-                isDark: isDark,
+          // Animated bubbles
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: BubblePainter(
+                  bubbles: _bubbles,
+                  controllerValue: _controller.value,
+                  primaryColor: colorScheme.primary,
+                  secondaryColor: colorScheme.secondary,
+                  isDark: isDark,
+                ),
+                size: Size.infinite,
+              );
+            },
+          ),
+
+          // Glass overlay pattern (optional subtle grid or noise)
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  backgroundColor.withValues(alpha: 0.3),
+                  backgroundColor.withValues(alpha: 0.7),
+                ],
+                stops: const [0.0, 1.0],
               ),
-              size: Size.infinite,
-            );
-          },
-        ),
-
-        // Glass overlay pattern (optional subtle grid or noise)
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                backgroundColor.withValues(alpha: 0.3),
-                backgroundColor.withValues(alpha: 0.7),
-              ],
-              stops: const [0.0, 1.0],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

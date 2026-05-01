@@ -92,11 +92,14 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final illustrationSize = (screenHeight * 0.35).clamp(200.0, 350.0);
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
         return Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -107,11 +110,18 @@ class _OnboardingPageState extends State<OnboardingPage>
                 opacity: _fadeAnimation,
                 child: ScaleTransition(
                   scale: _scaleAnimation,
-                  child: _buildModernIllustration(context),
+                  child: SizedBox(
+                    width: illustrationSize,
+                    height: illustrationSize,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: _buildModernIllustration(context),
+                    ),
+                  ),
                 ),
               ),
               
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               
               // Title with slide animation
               Transform.translate(
@@ -126,7 +136,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                 ),
               ),
               
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               
               // Description with slide animation
               Transform.translate(
@@ -143,7 +153,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                 ),
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               
               // Optional action button (for the last page) with fade
               if (widget.actionButton != null)
@@ -163,9 +173,9 @@ class _OnboardingPageState extends State<OnboardingPage>
   Widget _buildModernIllustration(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    if (widget.title.contains('Compression') || widget.title.contains('High')) {
+    if (widget.title.contains('Neural') || widget.title.contains('Precision')) {
       return _buildCompressionIllustration(context, isDark);
-    } else if (widget.title.contains('Fast') || widget.title.contains('AI')) {
+    } else if (widget.title.contains('Instant') || widget.title.contains('Delivery')) {
       return _buildSpeedAIIllustration(context, isDark);
     } else {
       return _buildUploadIllustration(context, isDark);

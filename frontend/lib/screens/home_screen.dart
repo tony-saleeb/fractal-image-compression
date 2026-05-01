@@ -278,7 +278,7 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                       Row(
                         children: [
                           Image.asset(
-                            'assets/images/logo.png',
+                            AppConstants.logoPath,
                             width: 44,
                             height: 44,
                             fit: BoxFit.contain,

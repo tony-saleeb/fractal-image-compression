@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../utils/constants.dart';
 import '../utils/routes.dart';
 import '../widgets/onboarding_page.dart';
 import '../widgets/animated_theme_toggle.dart';
@@ -25,10 +23,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.onboardingCompleteKey, true);
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, AppRoutes.auth);
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   void _onPageChanged(int page) {

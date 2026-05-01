@@ -13,8 +13,8 @@ class AppTheme {
   static const Color lightSecondary = Color(0xFF007AFF); // Bright blue
   
   // Dark Theme (Blues & Blacks)
-  static const Color darkBackground = Color(0xFF020617); // Ultra dark blue/black
-  static const Color darkSurface = Color(0xFF0F172A); // Deep slate blue
+  static const Color darkBackground = Color(0xFF000000); // Pure black to match website
+  static const Color darkSurface = Color(0xFF020617); // Extremely dark blue/black
   static const Color darkPrimary = Color(0xFF3B82F6); // Bright blue
   static const Color darkSecondary = Color(0xFF60A5FA); // Lighter blue
 

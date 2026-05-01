@@ -5,6 +5,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Service for handling Firebase Authentication.
 class AuthService {
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+
+  AuthService._internal();
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
