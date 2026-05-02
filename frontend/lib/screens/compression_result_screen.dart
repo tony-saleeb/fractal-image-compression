@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/compression_service.dart';
@@ -235,30 +235,25 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            padding: const EdgeInsets.all(24),
+            child: Wrap(
+              spacing: 24,
+              runSpacing: 24,
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 _buildModernStat('ORIGINAL', widget.originalSize),
-                _buildVerticalDivider(),
                 _buildModernStat(
                   'RESULT',
                   widget.compressedSize,
                   isPrimary: true,
                 ),
-                if (widget.compressionRatio != null) ...[
-                  _buildVerticalDivider(),
+                if (widget.compressionRatio != null)
                   _buildModernStat('RATIO', widget.compressionRatio!),
-                ],
-                if (widget.psnr != null && widget.psnr != '0.00 dB') ...[
-                  _buildVerticalDivider(),
+                if (widget.psnr != null && widget.psnr != '0.00 dB')
                   _buildModernStat('PSNR', widget.psnr!),
-                ],
-                if (widget.rmse != null && widget.rmse != '0.00') ...[
-                  _buildVerticalDivider(),
+                if (widget.rmse != null && widget.rmse != '0.00')
                   _buildModernStat('RMSE', widget.rmse!),
-                ],
-                _buildVerticalDivider(),
                 _buildModernStat(
                   'TIME',
                   _formatDuration(widget.compressionTime),
@@ -270,6 +265,7 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
       ),
     );
   }
+
 
   Widget _buildModernStat(
     String label,
@@ -300,14 +296,6 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildVerticalDivider() {
-    return Container(
-      height: 30,
-      width: 1.5,
-      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
     );
   }
 
@@ -355,15 +343,16 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
     if (widget.ficBytes == null) return;
     final filename = 'fc_${DateTime.now().millisecondsSinceEpoch}.fic';
     try {
-      debugPrint('[Export] Saving to temp for sharing...');
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$filename');
-      await file.writeAsBytes(widget.ficBytes!);
+      debugPrint('[Export] Requesting save location for .fic...');
+      final String? outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Fractal File',
+        fileName: filename,
+        bytes: widget.ficBytes,
+      );
 
-      debugPrint('[Export] Launching Share sheet for: $filename');
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], subject: 'Fractal Compressed Image (.fic)');
+      if (outputPath != null && context.mounted) {
+        _showSuccessSnackBar(context, 'Saved successfully');
+      }
     } catch (e) {
       debugPrint('[Export] Error: $e');
       if (!context.mounted) return;
@@ -376,20 +365,41 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
     if (bytes == null) return;
     final filename = 'dec_${DateTime.now().millisecondsSinceEpoch}.png';
     try {
-      debugPrint('[Export] Saving PNG to temp for sharing...');
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$filename');
-      await file.writeAsBytes(bytes);
+      debugPrint('[Export] Requesting save location for PNG...');
+      final String? outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Neural Reconstruction',
+        fileName: filename,
+        bytes: bytes,
+      );
 
-      debugPrint('[Export] Launching Share sheet for: $filename');
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], subject: 'Neural Reconstruction');
+      if (outputPath != null && context.mounted) {
+        _showSuccessSnackBar(context, 'Image saved successfully');
+      }
     } catch (e) {
       debugPrint('[Export] Error: $e');
       if (!context.mounted) return;
       _showErrorSnackBar(context, e.toString());
     }
+  }
+
+
+
+  void _showSuccessSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   void _showErrorSnackBar(BuildContext context, String e) {

@@ -14,7 +14,8 @@
     <application
         android:label="deepfract"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:requestLegacyExternalStorage="true">
         
         <!-- Disable Impeller to fix BackdropFilter/blur crashes on emulators -->
         <meta-data

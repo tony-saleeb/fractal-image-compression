@@ -38,25 +38,49 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
     if (controller.isProcessing) return;
 
     debugPrint('[MobileHome] _handleCompress triggered');
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
+
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+        allowCompression: false,
+      );
+    } catch (e) {
+      debugPrint('[MobileHome] FilePicker error: $e');
+      if (mounted) _showError('Could not open file picker: $e');
+      return;
+    }
+
     if (result == null || result.files.isEmpty || !mounted) return;
 
     final picked = result.files.first;
-    debugPrint('[MobileHome] File picked path: ${picked.path}');
-    final File imageFile = File(picked.path!);
-    final Uint8List imageBytes = picked.bytes ?? await imageFile.readAsBytes();
+    debugPrint('[MobileHome] File picked - name: ${picked.name}, path: ${picked.path}, bytes: ${picked.bytes?.length}');
+
+    // Safely read image bytes - prefer bytes (always available with withData: true)
+    Uint8List? imageBytes;
+    try {
+      if (picked.bytes != null) {
+        imageBytes = picked.bytes!;
+      } else if (picked.path != null) {
+        imageBytes = await File(picked.path!).readAsBytes();
+      }
+    } catch (e) {
+      debugPrint('[MobileHome] Error reading file bytes: $e');
+      if (mounted) _showError('Failed to read the selected image.');
+      return;
+    }
+
+    if (imageBytes == null || imageBytes.isEmpty) {
+      if (mounted) _showError('Could not read the selected image.');
+      return;
+    }
+
     debugPrint('[MobileHome] File loaded, bytes length: ${imageBytes.length}');
 
-    // final ok = await controller.checkServerStatus();
-    // debugPrint('[MobileHome] Server check result: $ok');
-    // if (!ok && mounted) {
-    //   debugPrint('[MobileHome] Server offline - stopping');
-    //   _showServerError();
-    //   return;
-    // }
+    // Create a safe File reference (may be empty on some devices)
+    final File imageFile = picked.path != null ? File(picked.path!) : File('');
 
     try {
       final completer = Completer<void>();
@@ -126,8 +150,11 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
         );
       }
     } catch (e) {
+      debugPrint('[MobileHome] Compression error: $e');
       if (mounted && controller.errorMessage != null) {
         _showError(controller.errorMessage!);
+      } else if (mounted) {
+        _showError('Compression failed: $e');
       }
     } finally {
       if (mounted) controller.setProcessing(false);
@@ -144,9 +171,12 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
       result = await FilePicker.platform.pickFiles(
         type: FileType.any,
         allowMultiple: false,
+        withData: true,
+        allowCompression: false,
       );
     } catch (e) {
-      _showError('Explorer Error: $e');
+      debugPrint('[MobileHome] FilePicker error: $e');
+      if (mounted) _showError('Could not open file picker: $e');
       return;
     }
     
@@ -159,15 +189,27 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
         backgroundColor: Colors.orange,
       ));
     }
-    final Uint8List ficBytes =
-        picked.bytes ?? await File(picked.path!).readAsBytes();
-    final int ficSize = ficBytes.length;
 
-    // final ok = await controller.checkServerStatus();
-    // if (!ok && mounted) {
-    //   _showServerError();
-    //   return;
-    // }
+    // Safely read .fic bytes
+    Uint8List? ficBytes;
+    try {
+      if (picked.bytes != null) {
+        ficBytes = picked.bytes!;
+      } else if (picked.path != null) {
+        ficBytes = await File(picked.path!).readAsBytes();
+      }
+    } catch (e) {
+      debugPrint('[MobileHome] Error reading .fic bytes: $e');
+      if (mounted) _showError('Failed to read the selected .fic file.');
+      return;
+    }
+
+    if (ficBytes == null || ficBytes.isEmpty) {
+      if (mounted) _showError('Could not read the selected .fic file.');
+      return;
+    }
+
+    final int ficSize = ficBytes.length;
 
     try {
       final completer = Completer<void>();
@@ -233,8 +275,11 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
         );
       }
     } catch (e) {
+      debugPrint('[MobileHome] Decompression error: $e');
       if (mounted && controller.errorMessage != null) {
         _showError(controller.errorMessage!);
+      } else if (mounted) {
+        _showError('Decompression failed: $e');
       }
     } finally {
       if (mounted) controller.setProcessing(false);

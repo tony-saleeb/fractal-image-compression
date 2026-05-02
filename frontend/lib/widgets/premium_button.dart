@@ -101,7 +101,7 @@ class _PremiumButtonState extends State<PremiumButton>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: widget.isFullWidth ? double.infinity : null,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               gradient: gradient,
               color: widget.isPrimary ? null : backgroundColor,
@@ -127,15 +127,20 @@ class _PremiumButtonState extends State<PremiumButton>
               children: [
                 if (widget.icon != null) ...[
                   Icon(widget.icon, color: textColor, size: 20),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                 ],
-                Text(
-                  widget.text,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.text,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ),
               ],

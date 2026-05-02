@@ -46,13 +46,12 @@ class CompressionController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final File imageFile = (kIsWeb || pickedFile.path == null) 
-          ? File('') 
-          : File(pickedFile.path!);
+      final bool usePath = !kIsWeb && pickedFile.path != null;
+      final File imageFile = usePath ? File(pickedFile.path!) : File('');
 
       final result = await _service.compressImage(
-        imageFile: (kIsWeb || pickedFile.path == null) ? null : imageFile,
-        imageBytes: kIsWeb ? imageBytes : null,
+        imageFile: usePath ? imageFile : null,
+        imageBytes: usePath ? null : imageBytes,
         filename: pickedFile.name,
       );
 
