@@ -30,6 +30,11 @@ jobs:
           cd frontend/ios
           pod repo update
 
+      - name: Fix Deployment Target
+        run: |
+          cd frontend/ios
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9\.]*;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' Runner.xcodeproj/project.pbxproj
+
       - name: Build iOS App (Unsigned)
         run: |
           cd frontend
