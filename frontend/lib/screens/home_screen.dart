@@ -474,7 +474,7 @@ class _ModernActionCardState extends State<_ModernActionCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        transform: Matrix4.identity()..scale(_isPressed ? 0.97 : 1.0),
+        transform: Matrix4.diagonal3Values(_isPressed ? 0.97 : 1.0, _isPressed ? 0.97 : 1.0, 1.0),
         decoration: AppTheme.glassDecoration(isDark: widget.isDark).copyWith(
           boxShadow: [
             if (!_isPressed)
