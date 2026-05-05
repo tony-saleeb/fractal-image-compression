@@ -6,6 +6,7 @@
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?logo=Flutter&logoColor=white)](https://flutter.dev/)
+  [![Next.js](https://img.shields.io/badge/Next.js-black?logo=next.js&logoColor=white)](https://nextjs.org/)
   [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![iOS Build](https://github.com/tony-saleeb/fractal-image-compression/actions/workflows/build-ipa.yml/badge.svg)](https://github.com/tony-saleeb/fractal-image-compression/actions)
 </div>
@@ -17,6 +18,7 @@ DeepFract is an advanced image compression architecture bridging classic mathema
 ## ✨ Features
 
 - **Cross-Platform Client**: A beautiful, responsive Flutter mobile app for iOS and Android.
+- **Web Application**: A fast, modern Next.js web interface for desktop users.
 - **AI-Powered Compression**: Python-based backend that uses convolutional neural networks to intelligently compress and decompress images.
 - **Quadtree Decomposition**: Dynamically handles image complexity to optimize compression ratios.
 - **Firebase Integration**: Secure cloud storage, authentication, and database tracking.
@@ -88,11 +90,25 @@ flutter run
 flutter build ios --release
 ```
 
+### Web Application Setup (Next.js)
+The browser-based interface for Fractal Compression.
+```bash
+cd frontend/web
+npm install
+
+# To run the development server:
+npm run dev
+
+# To build for production:
+npm run build
+```
+
 ## 🛠 Project Structure
 
 ```
 ├── backend/          # Python backend containing the AI pipeline models
 ├── frontend/         # Flutter mobile application
+│   └── web/          # Next.js web application
 ├── build/            # Executable output directory
 └── .github/          # CI/CD workflows for automated iOS builds
 ```
