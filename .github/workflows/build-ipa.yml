@@ -25,6 +25,12 @@ jobs:
           cd frontend
           flutter pub get
 
+      - name: Update CocoaPods
+        run: |
+          cd frontend/ios
+          pod repo update
+          pod install
+
       - name: Build iOS App (Unsigned)
         run: |
           cd frontend
