@@ -36,7 +36,7 @@ jobs:
           cd ios/App
           # We build an unsigned app since we don't have Apple Certificates in the repo
           xcodebuild clean build \
-            -workspace App.xcworkspace \
+            -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
