@@ -54,11 +54,11 @@ class DefaultFirebaseOptions {
   // iOS configuration (Placeholder until Firebase CLI reconfiguration)
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDKlZlPkvn2o62OFig-BjKgiLMRqc0lF3s',
-    appId: '1:292769921948:web:fb930135b8914732692659',
+    appId: '1:292769921948:ios:fb930135b8914732692659',
     messagingSenderId: '292769921948',
     projectId: 'deepfract',
     storageBucket: 'deepfract.firebasestorage.app',
-    iosBundleId: 'com.tony.deepfract',
+    iosBundleId: 'com.example.deepfract',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

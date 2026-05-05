@@ -289,7 +289,7 @@ class ProfileScreen extends StatelessWidget {
                       themeProvider.toggleTheme();
                     });
                   },
-                  activeColor: Theme.of(context).colorScheme.primary,
+                  activeThumbColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],
