@@ -1,61 +1,44 @@
-name: Build iOS IPA
+name: Build Flutter iOS IPA
 
 on:
-  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
   build_ios:
-    name: Build iOS IPA
+    name: Build Flutter iOS IPA
     runs-on: macos-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: '22'
+          channel: 'stable'
 
-      - name: Install npm dependencies
-        run: npm install
-
-      - name: Create Dummy Web Assets
+      - name: Install Dependencies
         run: |
-          mkdir -p build
-          echo "<!DOCTYPE html><html><body></body></html>" > build/index.html
+          cd frontend
+          flutter pub get
 
-      - name: Sync Capacitor iOS
-        run: npx cap sync ios
-
-      - name: Build Xcode Project (Unsigned)
+      - name: Build iOS App (Unsigned)
         run: |
-          cd ios/App
-          # We build an unsigned app since we don't have Apple Certificates in the repo
-          xcodebuild clean build \
-            -project App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY=""
+          cd frontend
+          flutter build ios --release --no-codesign
 
       - name: Package into IPA
         run: |
-          cd ios/App/build/Build/Products/Release-iphoneos
+          cd frontend/build/ios/iphoneos
           mkdir -p Payload
-          # Move the compiled .app into the Payload folder
-          mv App.app Payload/
-          # Zip it up as an .ipa file
+          mv Runner.app Payload/
           zip -r app.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-unsigned-ipa
-          path: ios/App/build/Build/Products/Release-iphoneos/app.ipa
+          name: release-flutter-ipa
+          path: frontend/build/ios/iphoneos/app.ipa
