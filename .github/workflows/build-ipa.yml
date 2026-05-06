@@ -1,4 +1,4 @@
-name: Build Flutter iOS IPA
+name: Build Shorebird iOS IPA
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_ios:
-    name: Build Flutter iOS IPA
+    name: Build Shorebird iOS IPA
     runs-on: macos-latest
 
     steps:
@@ -19,6 +19,11 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
 
       - name: Install Dependencies
         run: |
@@ -35,10 +40,12 @@ jobs:
           cd frontend/ios
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9\.]*;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' Runner.xcodeproj/project.pbxproj
 
-      - name: Build iOS App (Unsigned)
+      - name: Shorebird Release iOS (Unsigned)
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           cd frontend
-          flutter build ios --release --no-codesign
+          shorebird release ios --no-codesign
 
       - name: Package into IPA
         run: |
@@ -50,5 +57,5 @@ jobs:
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-flutter-ipa
+          name: release-shorebird-ipa
           path: frontend/build/ios/iphoneos/app.ipa
