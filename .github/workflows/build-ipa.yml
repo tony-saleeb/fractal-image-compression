@@ -49,7 +49,9 @@ jobs:
 
       - name: Package into IPA
         run: |
-          cd frontend/build/ios/iphoneos
+          cd frontend
+          APP_PATH=$(find build/ios -name "Runner.app" -type d | head -n 1)
+          cd $(dirname "$APP_PATH")
           mkdir -p Payload
           mv Runner.app Payload/
           zip -r app.ipa Payload
@@ -58,4 +60,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-shorebird-ipa
-          path: frontend/build/ios/iphoneos/app.ipa
+          path: frontend/**/app.ipa
