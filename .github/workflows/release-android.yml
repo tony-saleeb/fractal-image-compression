@@ -38,4 +38,4 @@ jobs:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           cd frontend
-          shorebird release android --force
+          shorebird release android
