@@ -419,33 +419,35 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
     try {
       final isDecompress = widget.mode == CompressionMode.decompress;
       final bytes = isDecompress ? widget.decodedImageBytes : widget.ficBytes;
-
-      if (bytes == null) {
-        // Fallback if results are somehow missing
+      
+      if (bytes == null || bytes.isEmpty) {
         await Share.shareXFiles(
           [XFile(widget.originalImage.path)],
-          text:
-              'Neural Compression Results: ${widget.originalSize} ➔ ${widget.compressedSize}',
+          text: 'Neural Compression Results',
         );
         return;
       }
 
+      // Use cache directory as it is often more accessible for sharing on Android
       final tempDir = await getTemporaryDirectory();
-      final fileName =
-          isDecompress ? 'neural_reconstruction.png' : 'compressed_fractal.fic';
+      final extension = isDecompress ? 'png' : 'fic';
+      final fileName = isDecompress ? 'result.png' : 'result.fic';
       final tempFile = File('${tempDir.path}/$fileName');
-      await tempFile.writeAsBytes(bytes);
+      
+      await tempFile.writeAsBytes(bytes, flush: true);
 
+      final mimeType = isDecompress ? 'image/png' : 'application/octet-stream';
+
+      debugPrint('[Share] Sharing file: ${tempFile.path} ($mimeType)');
+      
       await Share.shareXFiles(
-        [XFile(tempFile.path)],
-        text:
-            isDecompress
-                ? 'Neural Reconstruction Complete: ${widget.originalSize} ➔ ${widget.compressedSize}'
-                : 'Neural Compression Complete: ${widget.originalSize} ➔ ${widget.compressedSize}',
+        [XFile(tempFile.path, mimeType: mimeType)],
+        subject: isDecompress ? 'DeepFract Reconstruction' : 'DeepFract Compressed File',
       );
     } catch (e) {
+      debugPrint('[Share] Error: $e');
       if (!context.mounted) return;
-      _showErrorSnackBar(context, e.toString());
+      _showErrorSnackBar(context, 'Share failed: $e');
     }
   }
 
