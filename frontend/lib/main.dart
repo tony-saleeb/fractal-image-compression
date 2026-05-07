@@ -21,18 +21,12 @@ Future<void> main() async {
     );
   }
 
-  // Load saved theme before building app so splash gets the right theme
-  final preferences = await SharedPreferences.getInstance();
-  final savedDark = preferences.getBool('theme_mode') ?? true; // default dark
-
   // Make system bars transparent
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
+    const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarIconBrightness: savedDark ? Brightness.light : Brightness.dark,
-      statusBarIconBrightness: savedDark ? Brightness.light : Brightness.dark,
     ),
   );
 
@@ -42,7 +36,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider(initialDark: savedDark)),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => CompressionController()),
       ],
       child: const ThemeSwitcher(child: DeepFractApp()),

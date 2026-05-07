@@ -2,41 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode;
-  static const String _themeModeKey = 'theme_mode';
+  ThemeMode _themeMode = ThemeMode.system;
   bool _mounted = true;
 
   ThemeMode get themeMode => _themeMode;
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
+  
+  /// In system mode, we check the platform brightness
+  bool get isDarkMode => _themeMode == ThemeMode.system 
+      ? (WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark)
+      : _themeMode == ThemeMode.dark;
 
-  ThemeProvider({bool initialDark = true})
-      : _themeMode = initialDark ? ThemeMode.dark : ThemeMode.light;
+  ThemeProvider();
 
-  Future<void> toggleTheme() async {
-    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    if (_mounted) {
-      notifyListeners();
+  void toggleTheme() {
+    // If it's system, we toggle based on current actual brightness
+    if (_themeMode == ThemeMode.system) {
+      final isCurrentlyDark = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+      _themeMode = isCurrentlyDark ? ThemeMode.light : ThemeMode.dark;
+    } else {
+      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     }
     
-    try {
-      final preferences = await SharedPreferences.getInstance();
-      await preferences.setBool(_themeModeKey, _themeMode == ThemeMode.dark);
-    } catch (e) {
-      // Ignore storage errors
+    if (_mounted) {
+      notifyListeners();
     }
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
+  void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
     if (_mounted) {
       notifyListeners();
-    }
-    
-    try {
-      final preferences = await SharedPreferences.getInstance();
-      await preferences.setBool(_themeModeKey, mode == ThemeMode.dark);
-    } catch (e) {
-      // Ignore storage errors
     }
   }
 
