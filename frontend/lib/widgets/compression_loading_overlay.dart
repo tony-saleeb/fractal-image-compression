@@ -232,7 +232,7 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
             
             // Orbiting Node
             Transform.rotate(
-              angle: _rotationAnimation.value * 1.5,
+              angle: _rotationAnimation.value * 2.0,
               child: Transform.translate(
                 offset: const Offset(70, 0),
                 child: Container(
