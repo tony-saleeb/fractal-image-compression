@@ -65,12 +65,12 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
       curve: Curves.easeInOut,
     );
 
+    _mainController.repeat();
     _startFlow();
   }
 
   Future<void> _startFlow() async {
-    debugPrint('[Overlay] _startFlow: Starting animation and task');
-    _mainController.repeat();
+    debugPrint('[Overlay] _startFlow: Starting task');
     
     // Animate steps (non-blocking)
     _simulateSteps();
@@ -91,7 +91,6 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
       if (mounted) {
         debugPrint('[Overlay] Finally block reached. Synchronizing UI...');
         // Enforce a minimum display time to ensure Navigator transition is stable
-        // and user sees the "Processing" logic.
         await Future.delayed(const Duration(milliseconds: 600));
         
         if (mounted) {
@@ -187,73 +186,74 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
   }
 
   Widget _buildNeuralRing(ThemeData theme) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_mainController, _pulseController]),
-      builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Ambient Outer Glow
-            Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.15 * _scaleAnimation.value),
-                    Colors.transparent,
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Ambient Outer Glow
+        AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, _) => Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.15 * _scaleAnimation.value),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        // Rotating Dashed Ring
+        RotationTransition(
+          turns: _mainController,
+          child: CustomPaint(
+            size: const Size(140, 140),
+            painter: _DashedRingPainter(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            ),
+          ),
+        ),
+        
+        // Rotating Logo
+        RotationTransition(
+          turns: _mainController,
+          child: Image.asset(
+            AppConstants.logoPath,
+            width: 80,
+            height: 80,
+            fit: BoxFit.contain,
+          ),
+        ),
+        
+        // Orbiting Node
+        RotationTransition(
+          turns: _mainController,
+          child: Transform.translate(
+            offset: const Offset(70, 0),
+            child: RotationTransition(
+              turns: _mainController, // Makes the dot rotate 2x total relative to the ring
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary,
+                      blurRadius: 10,
+                    )
                   ],
                 ),
               ),
             ),
-            
-            // Rotating Dashed Ring
-            Transform.rotate(
-              angle: _rotationAnimation.value,
-              child: CustomPaint(
-                size: const Size(140, 140),
-                painter: _DashedRingPainter(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                ),
-              ),
-            ),
-            
-            // Rotating Logo
-            Transform.rotate(
-              angle: _rotationAnimation.value,
-              child: Image.asset(
-                AppConstants.logoPath,
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
-              ),
-            ),
-            
-            // Orbiting Node
-            Transform.rotate(
-              angle: _rotationAnimation.value * 2.0,
-              child: Transform.translate(
-                offset: const Offset(70, 0),
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary,
-                        blurRadius: 10,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }
