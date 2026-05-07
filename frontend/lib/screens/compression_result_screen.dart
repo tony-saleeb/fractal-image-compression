@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../services/compression_service.dart';
 import '../utils/theme_provider.dart';
 import '../utils/theme.dart';
@@ -266,7 +267,6 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
     );
   }
 
-
   Widget _buildModernStat(
     String label,
     String value, {
@@ -382,14 +382,16 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
     }
   }
 
-
-
   void _showSuccessSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
@@ -415,10 +417,31 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
 
   Future<void> _shareImage(BuildContext context) async {
     try {
+      final isDecompress = widget.mode == CompressionMode.decompress;
+      final bytes = isDecompress ? widget.decodedImageBytes : widget.ficBytes;
+
+      if (bytes == null) {
+        // Fallback if results are somehow missing
+        await Share.shareXFiles(
+          [XFile(widget.originalImage.path)],
+          text:
+              'Neural Compression Results: ${widget.originalSize} ➔ ${widget.compressedSize}',
+        );
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final fileName =
+          isDecompress ? 'neural_reconstruction.png' : 'compressed_fractal.fic';
+      final tempFile = File('${tempDir.path}/$fileName');
+      await tempFile.writeAsBytes(bytes);
+
       await Share.shareXFiles(
-        [XFile(widget.originalImage.path)],
+        [XFile(tempFile.path)],
         text:
-            'Neural Compression Results: ${widget.originalSize} ➔ ${widget.compressedSize}',
+            isDecompress
+                ? 'Neural Reconstruction Complete: ${widget.originalSize} ➔ ${widget.compressedSize}'
+                : 'Neural Compression Complete: ${widget.originalSize} ➔ ${widget.compressedSize}',
       );
     } catch (e) {
       if (!context.mounted) return;
