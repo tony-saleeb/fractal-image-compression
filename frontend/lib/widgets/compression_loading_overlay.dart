@@ -30,9 +30,8 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
     with TickerProviderStateMixin {
   late AnimationController _mainController;
   late AnimationController _pulseController;
-  late Animation<double> _rotationAnimation;
   late Animation<double> _scaleAnimation;
-  
+
   int _currentStep = 0;
 
   final List<String> _steps = [
@@ -56,10 +55,6 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
       vsync: this,
     )..repeat(reverse: true);
 
-    _rotationAnimation = Tween<double>(begin: 0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.linear),
-    );
-
     _scaleAnimation = CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
@@ -71,7 +66,7 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
 
   Future<void> _startFlow() async {
     debugPrint('[Overlay] _startFlow: Starting task');
-    
+
     // Animate steps (non-blocking)
     _simulateSteps();
 
@@ -92,7 +87,7 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
         debugPrint('[Overlay] Finally block reached. Synchronizing UI...');
         // Enforce a minimum display time to ensure Navigator transition is stable
         await Future.delayed(const Duration(milliseconds: 600));
-        
+
         if (mounted) {
           debugPrint('[Overlay] Calling onComplete callback.');
           widget.onComplete();
@@ -103,15 +98,15 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
 
   Future<void> _simulateSteps() async {
     for (int i = 0; i < _steps.length; i++) {
-       // Stop simulation immediately if task finished or widget disposed
-       if (!mounted) break;
-       setState(() => _currentStep = i);
-       
-       // Slower steps for a more professional "neural feel"
-       await Future.delayed(const Duration(milliseconds: 1000));
-       
-       // If the real task finished, we might want to speed up or stop
-       if (_currentStep >= _steps.length - 1) break;
+      // Stop simulation immediately if task finished or widget disposed
+      if (!mounted) break;
+      setState(() => _currentStep = i);
+
+      // Slower steps for a more professional "neural feel"
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      // If the real task finished, we might want to speed up or stop
+      if (_currentStep >= _steps.length - 1) break;
     }
   }
 
@@ -139,11 +134,13 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
               child: Container(
-                color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.6),
+                color: (isDark ? Colors.black : Colors.white).withValues(
+                  alpha: 0.6,
+                ),
               ),
             ),
           ),
-          
+
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -151,7 +148,7 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
                 // Neural Ring
                 _buildNeuralRing(theme),
                 const SizedBox(height: 60),
-                
+
                 // Progress Info
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
@@ -170,7 +167,9 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
                       Text(
                         'Processing Neural Weights...',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.4,
+                          ),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -192,21 +191,24 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
         // Ambient Outer Glow
         AnimatedBuilder(
           animation: _pulseController,
-          builder: (context, _) => Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.15 * _scaleAnimation.value),
-                  Colors.transparent,
-                ],
+          builder:
+              (context, _) => Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      theme.colorScheme.primary.withValues(
+                        alpha: 0.15 * _scaleAnimation.value,
+                      ),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
         ),
-        
+
         // Rotating Dashed Ring
         RotationTransition(
           turns: _mainController,
@@ -217,7 +219,7 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
             ),
           ),
         ),
-        
+
         // Rotating Logo
         RotationTransition(
           turns: _mainController,
@@ -228,14 +230,15 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
             fit: BoxFit.contain,
           ),
         ),
-        
+
         // Orbiting Node
         RotationTransition(
           turns: _mainController,
           child: Transform.translate(
             offset: const Offset(70, 0),
             child: RotationTransition(
-              turns: _mainController, // Makes the dot rotate 2x total relative to the ring
+              turns:
+                  _mainController, // Makes the dot rotate 2x total relative to the ring
               child: Container(
                 width: 12,
                 height: 12,
@@ -243,10 +246,7 @@ class _CompressionLoadingOverlayState extends State<CompressionLoadingOverlay>
                   color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary,
-                      blurRadius: 10,
-                    )
+                    BoxShadow(color: theme.colorScheme.primary, blurRadius: 10),
                   ],
                 ),
               ),
@@ -264,11 +264,12 @@ class _DashedRingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
+    final paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round;
 
     final radius = size.width / 2;
     const dashCount = 20;
@@ -288,4 +289,3 @@ class _DashedRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
