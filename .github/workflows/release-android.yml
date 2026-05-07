@@ -38,4 +38,10 @@ jobs:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           cd frontend
-          shorebird release android
+          shorebird release android --artifact=apk
+
+      - name: 📁 Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepfract-release-apk
+          path: frontend/build/app/outputs/flutter-apk/app-release.apk
