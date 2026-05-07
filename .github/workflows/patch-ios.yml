@@ -32,4 +32,4 @@ jobs:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           cd frontend
-          shorebird patch ios --no-codesign --release-version=latest
+          shorebird patch ios --no-codesign --release-version=latest --allow-asset-diffs
