@@ -6,6 +6,7 @@
     "CBAM",
     "compressai",
     "deepfract",
+    "dists",
     "fic",
     "flutterfire",
     "Fract",
@@ -27,6 +28,8 @@
     "Quadtree",
     "ResNet",
     "rmse",
+    "shorebirdtech",
+    "subosito",
     "UNet",
     "withOpacity",
     "withValues"
