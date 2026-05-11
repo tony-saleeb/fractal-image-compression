@@ -19,6 +19,7 @@ Flutter usage:
     // res.stream contains the .fic bytes
 """
 
+
 import os, sys, io, struct, time, gc, asyncio, traceback
 import torch
 import torch.nn.functional as F
@@ -48,7 +49,7 @@ try:
     Cheng2020Anchor    = models_mod.Cheng2020Anchor
     compute_padding    = ops_mod.compute_padding
     COMPRESSAI_MODE    = "standard"
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     import compressai_fallback
     Cheng2020Attention = compressai_fallback.Cheng2020Attention
     Cheng2020Anchor    = compressai_fallback.Cheng2020Anchor
@@ -61,7 +62,7 @@ MODEL_PATH = os.environ.get(
     'FC_MODEL',
     os.path.join(os.path.dirname(__file__), 'models', 'finetuned_fractalcompression_q2.pth')
 )
-PORT    = int(os.environ.get('FC_PORT', 8000))
+PORT    = int(os.environ.get('PORT', os.environ.get('FC_PORT', 8000)))
 HOST    = os.environ.get('FC_HOST', '0.0.0.0')
 DEVICE  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -89,7 +90,7 @@ def init_upsampler():
         from custom_decoder import RRDBNet
         models_dir = os.path.join(os.path.dirname(__file__), 'models')
         sr_path = os.path.join(models_dir, 'my_custom_sr_decoder_epoch5.pth')
-        
+
         if not os.path.exists(sr_path):
             print(f"  [Warning] SR model not found at {sr_path}. Skipping.", flush=True)
             UPSAMPLER = None
@@ -104,9 +105,9 @@ def init_upsampler():
             state = state['model_state_dict']
         model.load_state_dict(state, strict=False)
         model.eval()
-        
+
         UPSAMPLER = model
-        print(f"  Custom SR Decoder ready (PyTorch, tiled inference).", flush=True)
+        print("  Custom SR Decoder ready (PyTorch, tiled inference).", flush=True)
     except BaseException as e:
         print(f"  [Warning] SR initialization failed: {e}", flush=True)
         UPSAMPLER = None
@@ -164,22 +165,8 @@ def load_model():
     print(f"Device: {DEVICE}", flush=True)
 
     ckpt = torch.load(MODEL_PATH, map_location='cpu', weights_only=False)
-    if isinstance(ckpt, dict):
-        sd = ckpt.get('model_state_dict', ckpt.get('state_dict', ckpt))
-        epoch = ckpt.get('epoch', '?')
-        psnr = ckpt.get('val_psnr', '?')
-        bpp = ckpt.get('val_bpp', '?')
-        psnr_str = f"{psnr:.2f}" if isinstance(psnr, (int, float)) else str(psnr)
-        bpp_str = f"{bpp:.4f}" if isinstance(bpp, (int, float)) else str(bpp)
-        print(f"  Epoch {epoch} | PSNR {psnr_str} dB | BPP {bpp_str}", flush=True)
-    else:
-        sd = ckpt
-
-    N = 128
-    for k, v in sd.items():
-        if 'g_a.0.conv1.weight' in k:
-            N = v.shape[0]; break
-
+    sd = _extracted_from_load_model_8(ckpt) if isinstance(ckpt, dict) else ckpt
+    N = next((v.shape[0] for k, v in sd.items() if 'g_a.0.conv1.weight' in k), 128)
     has_attention = any('conv_a' in k for k in sd.keys())
     ModelClass    = Cheng2020Attention if has_attention else Cheng2020Anchor
     print(f"  {'FractalCompression-Attention' if has_attention else 'FractalCompression-Anchor'}  N={N}", flush=True)
@@ -194,15 +181,32 @@ def load_model():
     # ── Warmup pass: pre-allocate memory + JIT compile PyTorch kernels ──
     print("  Running warmup inference...", flush=True)
     try:
-        dummy = torch.rand(1, 3, 64, 64, device=DEVICE)
-        with torch.inference_mode():
-            MODEL.compress(dummy)
-        del dummy
-        torch.cuda.empty_cache() if torch.cuda.is_available() else None
-        gc.collect()
-        print("  Warmup complete. Server starting...\n", flush=True)
+        _extracted_from_load_model_37(MODEL)
     except Exception as e:
         print(f"  [Warning] Warmup failed (non-fatal): {e}\n", flush=True)
+
+
+# TODO Rename this here and in `load_model`
+def _extracted_from_load_model_37(MODEL):
+    dummy = torch.rand(1, 3, 64, 64, device=DEVICE)
+    with torch.inference_mode():
+        MODEL.compress(dummy)
+    del dummy
+    torch.cuda.empty_cache() if torch.cuda.is_available() else None
+    gc.collect()
+    print("  Warmup complete. Server starting...\n", flush=True)
+
+
+# TODO Rename this here and in `load_model`
+def _extracted_from_load_model_8(ckpt):
+    result = ckpt.get('model_state_dict', ckpt.get('state_dict', ckpt))
+    epoch = ckpt.get('epoch', '?')
+    psnr = ckpt.get('val_psnr', '?')
+    bpp = ckpt.get('val_bpp', '?')
+    psnr_str = f"{psnr:.2f}" if isinstance(psnr, (int, float)) else str(psnr)
+    bpp_str = f"{bpp:.4f}" if isinstance(bpp, (int, float)) else str(bpp)
+    print(f"  Epoch {epoch} | PSNR {psnr_str} dB | BPP {bpp_str}", flush=True)
+    return result
 
 # ── FastAPI app ────────────────────────────────────────────────
 app = FastAPI(title="FractalCompression API", version="1.0")
@@ -226,9 +230,22 @@ async def global_exception_handler(request, exc):
     )
 
 
+@app.get("/")
+async def root():
+    return {
+        "message": "DeepFract Neural Backend is Running",
+        "engine": COMPRESSAI_MODE,
+        "endpoints": ["/health", "/compress", "/decompress"]
+    }
+
 @app.get("/health")
 def health():
-    return JSONResponse({"status": "ok", "model": MODEL_PATH, "device": str(DEVICE)})
+    return JSONResponse({
+        "status": "ok", 
+        "model": os.path.basename(MODEL_PATH), 
+        "device": str(DEVICE),
+        "engine": COMPRESSAI_MODE
+    })
 
 
 @app.post("/compress")
@@ -313,9 +330,9 @@ async def compress_endpoint(image: UploadFile = File(...)):
     
     stem  = os.path.splitext(image.filename or 'image')[0]
 
-    print(f"[compress] {image.filename}  source:{source_w}×{source_h}  "
-          f"encoded:{enc_w}×{enc_h}  "
-          f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  {elapsed:.2f}s", flush=True)
+    print(f"[compress] {image.filename}  source:{source_w}×{source_h}  "  
+        f"encoded:{enc_w}×{enc_h}  "  
+        f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  {elapsed:.2f}s", flush=True)
 
     return Response(
         content=fic_bytes,
@@ -346,7 +363,7 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
     print(f"\n[decompress] Received request for {fic.filename}", flush=True)
     data = await fic.read()
     print(f"  Read {len(data)} bytes.", flush=True)
-    
+
     magic = data[:4]
     if magic not in (b'FIC1', b'FIC2'):
         print(f"  [Error] Invalid magic: {magic}", flush=True)
@@ -369,7 +386,7 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
         len_z  = struct.unpack('<I', buf.read(4))[0]
         sy     = buf.read(len_y)
         sz     = buf.read(len_z)
-    
+
     print(f"  Dims: {source_w}x{source_h} (source) | {enc_w}x{enc_h} (encoded)", flush=True)
     print(f"  Strings: {len_y}y , {len_z}z", flush=True)
 
@@ -405,22 +422,22 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
         try:
             print("  Starting AI Super-Resolution (tiled PyTorch)...", flush=True)
             t1 = time.time()
-            
+
             def _sr_pass():
                 gc.disable()
                 try:
                     return sr_tiled_inference(UPSAMPLER, x_hat.cpu(), tile_size=128, overlap=16)
                 finally:
                     gc.enable()
-            
+
             x_sr = await asyncio.to_thread(_sr_pass)
             sr_elapsed = time.time() - t1
             print(f"  AI SR finished in {sr_elapsed:.2f}s", flush=True)
             elapsed += sr_elapsed
-            
+
             x_sr = torch.clamp(x_sr, 0, 1)
             img_enh_np = (x_sr.squeeze(0).permute(1, 2, 0).numpy() * 255).astype(np.uint8)
-            
+
             # ── Clever Color Correction Match (LAB Space) ──
             if HAS_CV2:
                 img_orig_np = (x_hat.squeeze(0).permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
@@ -433,7 +450,7 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
                 img_np = img_enh_np
 
             img = Image.fromarray(img_np)
-            print(f"  [AI SR Complete] Tiled reconstruction finished.", flush=True)
+            print("  [AI SR Complete] Tiled reconstruction finished.", flush=True)
         except Exception as e:
             print(f"  [AI SR Error]: Enhancement failed: {e}", flush=True)
 
@@ -446,8 +463,8 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
     png_bytes = png_buf.getvalue()
 
     stem = os.path.splitext(fic.filename or 'image')[0]
-    print(f"[decompress] {fic.filename}  source:{source_w}×{source_h}  "
-          f"encoded:{enc_w}×{enc_h}  size:{len(png_bytes)/1024:.1f} KB  {elapsed:.2f}s", flush=True)
+    print(f"[decompress] {fic.filename}  source:{source_w}×{source_h}  "  
+    f"encoded:{enc_w}×{enc_h}  size:{len(png_bytes)/1024:.1f} KB  {elapsed:.2f}s", flush=True)
 
     return Response(
         content=png_bytes,
