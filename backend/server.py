@@ -34,7 +34,7 @@ except ImportError:
     print("[Note] cv2 not installed. LAB color correction will be skipped.", flush=True)
 
 # ── FastAPI ────────────────────────────────────────────────────
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -231,11 +231,13 @@ async def global_exception_handler(request, exc):
 
 
 @app.get("/")
-async def root():
+async def root(request: Request):
+    """Root endpoint for health checks and monitoring"""
     return {
-        "message": "DeepFract Neural Backend is Running",
+        "status": "online",
         "engine": COMPRESSAI_MODE,
-        "endpoints": ["/health", "/compress", "/decompress"]
+        "message": "DeepFract Backend Ready",
+        "client": request.client.host if request.client else "unknown"
     }
 
 @app.get("/health")
