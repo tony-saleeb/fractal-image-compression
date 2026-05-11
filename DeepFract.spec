@@ -1,19 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
-
-datas = [('frontend\\assets\\images\\logo.png', 'assets')]
-binaries = []
-hiddenimports = ['customtkinter']
-tmp_ret = collect_all('customtkinter')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['deepfract_desktop.py'],
     pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
+    binaries=[],
+    datas=[('frontend/assets/images/logo.png', 'assets')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -42,4 +35,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version='C:\\Users\\TONY\\AppData\\Local\\Temp\\1cc56c7c-0b2b-44d8-bc04-0f6ae58076fa',
+    icon=['frontend\\assets\\images\\logo.png'],
 )
