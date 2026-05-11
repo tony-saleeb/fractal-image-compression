@@ -24,6 +24,7 @@ COPY custom_decoder.py .
 COPY fractalcompression_codec.py .
 COPY patch_compressai.py .
 COPY main.py .
+COPY compressai_fallback.py .
 COPY export_onnx.py .
 COPY src/ ./src/
 
