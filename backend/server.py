@@ -220,6 +220,15 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+@app.middleware("http")
+async def intercept_root(request: Request, call_next):
+    if request.url.path == "/":
+        return JSONResponse({
+            "status": "online",
+            "message": "DeepFract Root Interceptor Active"
+        })
+    return await call_next(request)
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     tb = traceback.format_exc()
