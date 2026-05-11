@@ -230,14 +230,17 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+@app.get("/")
+@app.head("/")
+async def root_ping():
+    print("[Monitor] Root ping received", flush=True)
+    return JSONResponse({"status": "online", "message": "DeepFract Root Active"})
+
 @app.middleware("http")
 async def intercept_root(request: Request, call_next):
     if request.url.path == "/":
-        return JSONResponse({
-            "status": "online",
-            "message": "DeepFract Root Interceptor Active",
-            "engine": COMPRESSAI_MODE
-        })
+        print(f"[Monitor] Intercepted {request.method} to /", flush=True)
+        return JSONResponse({"status": "online", "source": "middleware"})
     return await call_next(request)
 
 @app.exception_handler(Exception)
