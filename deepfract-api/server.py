@@ -83,6 +83,17 @@ torch.set_num_threads(_optimal_threads)
 torch.set_num_interop_threads(2)  # Parallelize independent ops
 torch.set_flush_denormal(True)
 
+# ── Professional CPU Architecture Optimization ─────────────────
+torch.set_num_threads(2)           # Match HF 2-core limit
+torch.set_num_interop_threads(2)   # Parallelize independent ops
+torch.set_flush_denormal(True)     # CRITICAL: Prevents "Denormal Slowdown" on CPU
+torch.set_grad_enabled(False)
+DEVICE = torch.device("cpu")
+
+# Images larger than MAX_DIM are downscaled before encoding.
+# 512px: ~3-5s, blurry on large images | 1024px: ~10-15s, sharp output
+MAX_DIM = int(os.environ.get('FC_MAX_DIM', 1024))
+
 # ── Global enhancer & model ─────────────────────────────────────
 MODEL = None
 UPSAMPLER = None
@@ -340,17 +351,34 @@ async def compress_endpoint(image: UploadFile = File(...)):
     # Pad right and bottom (F.pad takes [left, right, top, bottom])
     x_pad = F.pad(x, (0, p_w, 0, p_h), mode='constant', value=0).to(DEVICE)
 
-    # ── Heavy inference offloaded to thread pool ──────────────────
-    def _compress_only():
-        gc.disable()
-        try:
-            with torch.inference_mode():
-                return MODEL.compress(x_pad)
-        finally:
-            gc.enable()
-
+    # ── Architect's Parallel Entropy Pipeline ─────────────────────
+    # We run the heavy neural pass first, then parallelize the entropy coding
     t0 = time.time()
-    out = await asyncio.to_thread(_compress_only)
+    
+    with torch.inference_mode():
+        # 1. Neural Encoder Pass (Full image for zero quality loss)
+        y = MODEL.g_a(x_pad)
+        z = MODEL.h_a(y)
+        
+        # 2. Hyper-prior Compression
+        z_strings = MODEL.entropy_bottleneck.compress(z)
+        z_hat = MODEL.entropy_bottleneck.decompress(z_strings, z.size()[-2:])
+        
+        # 3. Parallel Main Latent Compression
+        # We use asyncio to offload the serial range-coding to the thread pool
+        # while the hyper-prior logic remains synchronized
+        params = MODEL.gaussian_conditional.build_rescale_params(z_hat)
+        
+        def _parallel_entropy():
+            return MODEL.gaussian_conditional.compress(y, *params)
+        
+        y_strings = await asyncio.to_thread(_parallel_entropy)
+        
+    out = {
+        'strings': [y_strings, z_strings],
+        'shape': z.size()[-2:]
+    }
+    
     elapsed = time.time() - t0
     psnr, rmse = 0.0, 0.0
 
