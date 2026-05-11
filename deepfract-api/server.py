@@ -390,7 +390,7 @@ async def compress_endpoint(image: UploadFile = File(...)):
         tile_x = F.pad(tile_x, (0, pw, 0, ph), mode='constant', value=0).to(DEVICE)
         
         def _task():
-            with torch.inference_mode(), torch.cpu.amp.autocast(enabled=True, dtype=torch.bfloat16):
+            with torch.inference_mode():
                 return MODEL.compress(tile_x)
         
         res = await asyncio.to_thread(_task)
@@ -552,12 +552,12 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
                 tsz = buf.read(lz)
                 
                 def _dec_tile():
-                    with torch.inference_mode(), torch.cpu.amp.autocast(enabled=True, dtype=torch.bfloat16):
+                    with torch.inference_mode():
                         out = MODEL.decompress([[tsy], [tsz]], [lh, lw])
                         return out['x_hat']
                 
                 tile_x_hat = await asyncio.to_thread(_dec_tile)
-                tile_np = tile_x_hat[0, :, :th, :tw].permute(1, 2, 0).cpu().numpy()
+                tile_np = tile_x_hat[0, :, :th, :tw].permute(1, 2, 0).float().cpu().numpy()
                 
                 y_s, x_s = ty * TILE_SIZE, tx * TILE_SIZE
                 full_canvas[y_s:y_s+th, x_s:x_s+tw, :] = tile_np
@@ -573,7 +573,7 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
         sz = buf.read(len_z)
         
         def _dec_task():
-            with torch.inference_mode(), torch.cpu.amp.autocast(enabled=True, dtype=torch.bfloat16):
+            with torch.inference_mode():
                 return MODEL.decompress([[sy], [sz]], [lat_h, lat_w])
         
         out = await asyncio.to_thread(_dec_task)
