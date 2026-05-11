@@ -21,10 +21,7 @@ class GDN(nn.Module):
         # Simple implementation of GDN (normalization)
         # Note: In real CompressAI this uses a more complex positivity constraint
         norm = F.conv2d(x**2, self.gamma.view(c, c, 1, 1), self.beta)
-        if self.inverse:
-            return x * torch.sqrt(norm)
-        else:
-            return x / torch.sqrt(norm)
+        return x * torch.sqrt(norm) if self.inverse else x / torch.sqrt(norm)
 
 # ── Attention Block ──────────────────────────────────────────────
 class AttentionBlock(nn.Module):
@@ -46,8 +43,7 @@ class AttentionBlock(nn.Module):
         identity = x
         a = self.conv_a(x)
         b = self.conv_b(x)
-        out = a * b + identity
-        return out
+        return a * b + identity
 
 # ── Sub-pixel Convolution helpers ──────────────────────────────
 def conv3x3(in_ch, out_ch, stride=1):
@@ -79,18 +75,14 @@ class EntropyModel(nn.Module):
         return torch.load(buf).float()
 
     def _load_from_state_dict(self, state_dict, prefix, *args, **kwargs):
-        for k in list(state_dict.keys()):
+        for k, v in state_dict.items():
             if k.startswith(prefix):
                 name = k[len(prefix):]
-                if '.' not in name: 
-                    if name not in self._buffers and name not in self._parameters:
-                        # If it looks like a parameter (ends in .weight, .bias or starts with _)
-                        # and it's in state_dict, register it so loading succeeds.
-                        if isinstance(state_dict[k], torch.Tensor):
-                            if name.startswith('_matrix') or name.startswith('_bias') or name.startswith('_factor'):
-                                self.register_parameter(name, nn.Parameter(torch.zeros_like(state_dict[k])))
-                            else:
-                                self.register_buffer(name, torch.zeros_like(state_dict[k]))
+                if '.' not in name and name not in self._buffers and name not in self._parameters and isinstance(v, torch.Tensor):
+                    if name.startswith(('_matrix', '_bias', '_factor')):
+                        self.register_parameter(name, nn.Parameter(torch.zeros_like(v)))
+                    else:
+                        self.register_buffer(name, torch.zeros_like(v))
         super()._load_from_state_dict(state_dict, prefix, *args, **kwargs)
 
 class EntropyBottleneck(EntropyModel):
