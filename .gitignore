@@ -38,8 +38,9 @@ coverage.xml
 *,cover
 .hypothesis/
 
-# Model weights (too large for git)
+# Model weights (too large for git, but we need this one for deployment)
 *.pth
+!deepfract-api/models/finetuned_fractalcompression_q2.pth
 *.onnx
 *.onnx.data
 
