@@ -366,12 +366,12 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
     print(f"  Read {len(data)} bytes.", flush=True)
 
     magic = data[:4]
-    if magic not in (b'FIC1', b'FIC2'):
+    if magic not in (b'FIC1', b'FIC2', b'FIC3'):
         print(f"  [Error] Invalid magic: {magic}", flush=True)
         raise HTTPException(400, "Not a valid .fic file")
 
-    is_v2 = (magic == b'FIC2')
-    print(f"  Format: {'FIC2' if is_v2 else 'FIC1'}", flush=True)
+    is_v2 = (magic in (b'FIC2', b'FIC3'))
+    print(f"  Format: {magic.decode('ascii')}", flush=True)
 
     with io.BytesIO(data) as buf:
         buf.read(4)   # skip magic
