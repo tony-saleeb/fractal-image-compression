@@ -84,8 +84,12 @@ torch.set_num_interop_threads(2)  # Parallelize independent ops
 torch.set_flush_denormal(True)
 
 # ── Professional CPU Architecture Optimization ─────────────────
-torch.set_num_threads(2)           # Match HF 2-core limit
-torch.set_num_interop_threads(2)   # Parallelize independent ops
+try:
+    torch.set_num_threads(2)           # Match HF 2-core limit
+    torch.set_num_interop_threads(2)   # Parallelize independent ops
+except RuntimeError:
+    pass # Already set or work started, no problem
+
 torch.set_flush_denormal(True)     # CRITICAL: Prevents "Denormal Slowdown" on CPU
 torch.set_grad_enabled(False)
 DEVICE = torch.device("cpu")
