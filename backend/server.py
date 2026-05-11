@@ -230,15 +230,14 @@ async def global_exception_handler(request, exc):
     )
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD", "POST", "OPTIONS"])
 async def root(request: Request):
-    """Root endpoint for health checks and monitoring"""
-    return {
+    """Universal root endpoint to satisfy all health monitors and proxies"""
+    return JSONResponse({
         "status": "online",
         "engine": COMPRESSAI_MODE,
-        "message": "DeepFract Backend Ready",
-        "client": request.client.host if request.client else "unknown"
-    }
+        "message": "DeepFract Backend Ready"
+    })
 
 @app.get("/health")
 def health():
