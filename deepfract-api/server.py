@@ -21,6 +21,13 @@ Flutter usage:
 
 
 import os, sys, io, struct, time, gc, asyncio, traceback, math, hashlib
+
+# ── Architect's OpenMP Thread Affinity (Must be set before torch import) ──
+os.environ["OMP_NUM_THREADS"] = "2"
+os.environ["OMP_PROC_BIND"] = "close"
+os.environ["GOMP_SPINCOUNT"] = "100"
+os.environ["KMP_AFFINITY"] = "granularity=fine,compact,1,0"
+
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -203,10 +210,17 @@ def load_model():
     m.eval().to(DEVICE)
     m.update()
     # ── CPU Optimization: Standard PyTorch is usually faster on HF ──
-    MODEL = m
-    print("  Model ready.", flush=True)
-
-    print("  Model ready.", flush=True)
+    # ── Dynamic INT8 Quantization: Reduces memory bandwidth wall ──
+    try:
+        print("  Applying Dynamic INT8 Quantization for cache efficiency...", flush=True)
+        MODEL = torch.quantization.quantize_dynamic(
+            m, {torch.nn.Linear}, dtype=torch.qint8
+        )
+    except Exception as e:
+        print(f"  [Warning] Quantization skipped: {e}", flush=True)
+        MODEL = m
+        
+    print("  Model ready (Architect optimized).", flush=True)
 
     # ── Warmup pass: pre-allocate memory + JIT compile PyTorch kernels ──
     print("  Running warmup inference...", flush=True)
