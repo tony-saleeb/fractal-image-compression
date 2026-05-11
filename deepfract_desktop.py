@@ -4,7 +4,7 @@ Premium desktop client with Flet UI connected to cloud backend.
 Modern Async Implementation for Flet 0.85+
 """
 
-import os, sys, io, time, asyncio, base64, hashlib, json
+import os, sys, io, time, asyncio, base64
 import flet as ft
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
@@ -22,20 +22,6 @@ def human_size(n):
             f"{n/1024**2:.1f} MB")
 
 # ── API (Async) ──────────────────────────────────────────────────
-CACHE_FILE = "metrics_history.json"
-
-def load_cache():
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, 'r') as f: return json.load(f)
-        except: return {}
-    return {}
-
-def save_cache(cache):
-    try:
-        with open(CACHE_FILE, 'w') as f: json.dump(cache, f)
-    except: pass
-
 async def api_health():
     async with httpx.AsyncClient() as client:
         try:
@@ -53,13 +39,12 @@ async def api_compress(path):
         r.raise_for_status()
         wall = time.perf_counter() - t0
         h = r.headers
-        print(f"DEBUG: Headers -> {dict(h)}") # Log all headers for debugging
         return r.content, {
             'original_size': len(data), 'compressed_size': len(r.content),
-            'ratio': float(h.get('X-Ratio', h.get('x-ratio', '0'))),
-            'psnr': float(h.get('X-PSNR', h.get('x-psnr', '0'))),
-            'rmse': float(h.get('X-RMSE', h.get('x-rmse', '0'))),
-            'time': float(h.get('X-Time', h.get('x-time', str(wall)))),
+            'ratio': float(h.get('X-Ratio', '0')),
+            'psnr': float(h.get('X-PSNR', '0')),
+            'rmse': float(h.get('X-RMSE', '0')),
+            'time': float(h.get('X-Time', str(wall))),
         }
 
 async def api_decompress(path):
@@ -76,10 +61,9 @@ async def api_decompress(path):
         return img, r.content, {
             'fic_size': len(data), 'output_size': len(r.content),
             'width': img.size[0], 'height': img.size[1],
-            'ratio': float(h.get('X-Ratio', h.get('x-ratio', '0'))),
-            'psnr': float(h.get('X-PSNR', h.get('x-psnr', '0'))),
-            'rmse': float(h.get('X-RMSE', h.get('x-rmse', '0'))),
-            'time': float(h.get('X-Time', h.get('x-time', str(wall)))),
+            'psnr': float(h.get('X-PSNR', '0')),
+            'rmse': float(h.get('X-RMSE', '0')),
+            'time': float(h.get('X-Time', str(wall))),
         }
 
 # ── Colors ───────────────────────────────────────────────────────
@@ -113,8 +97,7 @@ async def main(page: ft.Page):
     page.window.min_height = 700
 
     state = {"mode": "compress", "busy": False,
-            "fic_bytes": None, "png_bytes": None, "result_img": None,
-            "metrics_cache": load_cache()} # Keyed by SHA-256 of .fic content
+            "fic_bytes": None, "png_bytes": None, "result_img": None}
 
     # FilePicker is a service in 0.85+, no need to add to overlay
     file_picker = ft.FilePicker()
@@ -365,10 +348,6 @@ async def main(page: ft.Page):
         try:
             fic, s = await api_compress(path)
             state["fic_bytes"] = fic; state["busy"] = False
-            fic_hash = hashlib.sha256(fic).hexdigest()
-            print(f"DEBUG: Compressed {os.path.basename(path)} -> Hash: {fic_hash[:10]}... PSNR: {s['psnr']}")
-            state["metrics_cache"][fic_hash] = (s['psnr'], s['rmse'])
-            save_cache(state["metrics_cache"])
             _set_stat(stat_ratio, f"{s['ratio']:.1f}:1", C["success"])
             _set_stat(stat_psnr, f"{s['psnr']:.1f} dB", C["cyan"])
             _set_stat(stat_rmse, f"{s['rmse']:.2f}", C["warning"])
@@ -410,21 +389,8 @@ async def main(page: ft.Page):
                 ], expand=True, spacing=8, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
             _set_stat(stat_size, human_size(s['output_size']), C["primary_light"])
             _set_stat(stat_time, f"{s['time']:.1f}s", C["text_sec"])
-            _set_stat(stat_ratio, f"{s['ratio']:.1f}:1" if s['ratio'] > 0 else "—", C["success"])
-            # Try to retrieve from session cache using file hash (fingerprint)
-            with open(path, 'rb') as f:
-                content = f.read()
-                fic_hash = hashlib.sha256(content).hexdigest()
-            
-            cached = state["metrics_cache"].get(fic_hash)
-            print(f"DEBUG: Decompressing {os.path.basename(path)} -> Hash: {fic_hash[:10]}... Cached: {cached}")
-            
-            if not cached: cached = (0, 0)
-            psnr = s['psnr'] if s['psnr'] > 0 else cached[0]
-            rmse = s['rmse'] if s['rmse'] > 0 else cached[1]
-            
-            _set_stat(stat_psnr, f"{psnr:.1f} dB" if psnr > 0 else "N/A", C["cyan"])
-            _set_stat(stat_rmse, f"{rmse:.2f}" if rmse > 0 else "N/A", C["warning"])
+            _set_stat(stat_psnr, f"{s['psnr']:.1f} dB" if s['psnr'] > 0 else "N/A", C["cyan"])
+            _set_stat(stat_rmse, f"{s['rmse']:.2f}" if s['rmse'] > 0 else "N/A", C["warning"])
             btn_save.visible = True; btn_reset.visible = True; btn_select.disabled = False
             status_text.value = "Decompression complete — Ready to save"; page.update()
         except Exception as ex:

@@ -19,7 +19,7 @@ Flutter usage:
     // res.stream contains the .fic bytes
 """
 
-import os, sys, io, struct, time, gc, asyncio, traceback, math
+import os, sys, io, struct, time, gc, asyncio, traceback
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -38,14 +38,23 @@ from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-# ── compressai ────────────────────────────────────────────────
+# ── compressai fallback (Hidden import to silence aggressive IDEs) ──
+import importlib
+COMPRESSAI_MODE = "fallback"
 try:
-    from compressai.models import Cheng2020Attention, Cheng2020Anchor
-    from compressai.ops import compute_padding
-except Exception as e:
-    print(f"[ERROR] compressai import failed: {e}")
-    print("Run:  py patch_compressai.py")
-    sys.exit(1)
+    models_mod = importlib.import_module("compressai.models")
+    ops_mod    = importlib.import_module("compressai.ops")
+    Cheng2020Attention = models_mod.Cheng2020Attention
+    Cheng2020Anchor    = models_mod.Cheng2020Anchor
+    compute_padding    = ops_mod.compute_padding
+    COMPRESSAI_MODE    = "standard"
+except (ImportError, ModuleNotFoundError):
+    import compressai_fallback
+    Cheng2020Attention = compressai_fallback.Cheng2020Attention
+    Cheng2020Anchor    = compressai_fallback.Cheng2020Anchor
+    compute_padding    = compressai_fallback.compute_padding
+
+print(f"[Info] Neural Engine: {COMPRESSAI_MODE} mode.", flush=True)
 
 # ── Config ────────────────────────────────────────────────────
 MODEL_PATH = os.environ.get(
@@ -148,15 +157,6 @@ def sr_tiled_inference(model, x_hat, tile_size=128, overlap=16):
     print(f"    SR tiles: {total_tiles} processed.          ", flush=True)
     return output / weight
 
-
-def compute_metrics(orig_tensor, recon_tensor):
-    """Calculate PSNR and RMSE between two tensors [1, 3, H, W]."""
-    mse = F.mse_loss(orig_tensor, recon_tensor).item()
-    if mse < 1e-10:
-        return 99.0, 0.0
-    psnr = 20 * math.log10(1.0 / math.sqrt(mse))
-    rmse = math.sqrt(mse) * 255.0
-    return psnr, rmse
 
 def load_model():
     global MODEL
@@ -288,33 +288,17 @@ async def compress_endpoint(image: UploadFile = File(...)):
     out = await asyncio.to_thread(_compress)
     elapsed = time.time() - t0
 
-    # ── Calculate Quality Metrics ──
-    # To get PSNR/RMSE, we must decompress what we just compressed
-    def _get_metrics():
-        with torch.inference_mode():
-            # Decompress the latent we just made
-            out_dec = MODEL.decompress(out['strings'], out['shape'])
-            x_hat = out_dec['x_hat']
-            # Crop to encoded dims
-            x_hat = x_hat[:, :, :enc_h, :enc_w]
-            x_hat = torch.clamp(x_hat, 0, 1)
-            # Compare against the (possibly resized) input x
-            return compute_metrics(x[:, :, :enc_h, :enc_w].to(DEVICE), x_hat)
-
-    psnr, rmse = await asyncio.to_thread(_get_metrics)
-
     sy    = out['strings'][0][0]
     sz    = out['strings'][1][0]
     shape = out['shape']
 
-    # Build .fic bytes in memory — FIC3 format stores metrics in header
+    # Build .fic bytes in memory — FIC2 format stores source dims for upscaling
     buf = io.BytesIO()
-    buf.write(b'FIC3')                                       # magic v3
+    buf.write(b'FIC2')                                       # magic v2
     buf.write(struct.pack('<HH', source_w, source_h))        # original dims
     buf.write(struct.pack('<HH', enc_w,    enc_h))           # encoded dims
     buf.write(struct.pack('<HH', x_pad.shape[3], x_pad.shape[2]))  # padded dims
     buf.write(struct.pack('<HH', shape[0], shape[1]))        # latent dims
-    buf.write(struct.pack('<ff', psnr, rmse))                # QUALITY METRICS
     buf.write(struct.pack('<I', len(sy)))
     buf.write(struct.pack('<I', len(sz)))
     buf.write(sy)
@@ -331,7 +315,7 @@ async def compress_endpoint(image: UploadFile = File(...)):
 
     print(f"[compress] {image.filename}  source:{source_w}×{source_h}  "
           f"encoded:{enc_w}×{enc_h}  "
-          f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  PSNR:{psnr:.1f}  {elapsed:.2f}s", flush=True)
+          f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  {elapsed:.2f}s", flush=True)
 
     return Response(
         content=fic_bytes,
@@ -339,8 +323,6 @@ async def compress_endpoint(image: UploadFile = File(...)):
         headers={
             "Content-Disposition": f'attachment; filename="{stem}.fic"',
             "X-Ratio":         f"{ratio:.1f}",
-            "X-PSNR":          f"{psnr:.1f}",
-            "X-RMSE":          f"{rmse:.2f}",
             "X-BPP":           f"{bpp:.4f}",
             "X-Time":          f"{elapsed:.2f}",
             "X-Width":         str(source_w),
@@ -366,15 +348,13 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
     print(f"  Read {len(data)} bytes.", flush=True)
     
     magic = data[:4]
-    if magic not in (b'FIC1', b'FIC2', b'FIC3'):
+    if magic not in (b'FIC1', b'FIC2'):
         print(f"  [Error] Invalid magic: {magic}", flush=True)
         raise HTTPException(400, "Not a valid .fic file")
 
-    is_v3 = (magic == b'FIC3')
-    is_v2 = (magic == b'FIC2' or is_v3)
-    print(f"  Format: {magic.decode()}", flush=True)
+    is_v2 = (magic == b'FIC2')
+    print(f"  Format: {'FIC2' if is_v2 else 'FIC1'}", flush=True)
 
-    psnr, rmse = 0.0, 0.0
     with io.BytesIO(data) as buf:
         buf.read(4)   # skip magic
         if is_v2:
@@ -385,10 +365,6 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
             source_w, source_h = enc_w, enc_h
         pad_w,  pad_h = struct.unpack('<HH', buf.read(4))
         lat_h,  lat_w = struct.unpack('<HH', buf.read(4))
-        
-        if is_v3:
-            psnr, rmse = struct.unpack('<ff', buf.read(8))
-            
         len_y  = struct.unpack('<I', buf.read(4))[0]
         len_z  = struct.unpack('<I', buf.read(4))[0]
         sy     = buf.read(len_y)
@@ -481,8 +457,6 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
             "X-Time":   f"{elapsed:.2f}",
             "X-Width":  str(source_w),
             "X-Height": str(source_h),
-            "X-PSNR":   f"{psnr:.1f}",
-            "X-RMSE":   f"{rmse:.2f}",
         }
     )
 
