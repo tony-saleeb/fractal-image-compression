@@ -35,15 +35,25 @@ torch.set_num_threads(os.cpu_count() or 4)
 # ──────────────────────────────────────────────
 # compressai import (run patch_compressai.py once if this fails)
 # ──────────────────────────────────────────────
+# ── compressai fallback (Hidden import to silence aggressive IDEs) ──
+import importlib
+COMPRESSAI_MODE = "fallback"
 try:
-    from compressai.models import Cheng2020Attention, Cheng2020Anchor
-    from compressai.ops import compute_padding
-except Exception as e:
-    import traceback
-    print(f"[ERROR] compressai import failed: {e}")
-    print("Run:  py patch_compressai.py")
-    traceback.print_exc()
-    sys.exit(1)
+    models_mod = importlib.import_module("compressai.models")
+    ops_mod    = importlib.import_module("compressai.ops")
+    Cheng2020Attention = models_mod.Cheng2020Attention
+    Cheng2020Anchor    = models_mod.Cheng2020Anchor
+    compute_padding    = ops_mod.compute_padding
+    COMPRESSAI_MODE    = "standard"
+except (ImportError, ModuleNotFoundError):
+    try:
+        import compressai_fallback
+        Cheng2020Attention = compressai_fallback.Cheng2020Attention
+        Cheng2020Anchor    = compressai_fallback.Cheng2020Anchor
+        compute_padding    = compressai_fallback.compute_padding
+    except ImportError:
+        print("[ERROR] All compressai imports failed. Please check backend/compressai_fallback.py")
+        sys.exit(1)
 
 MAGIC         = b'FIC1'
 DEFAULT_MODEL = 'models/finetuned_fractalcompression_q2.pth'
