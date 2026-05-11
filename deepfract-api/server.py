@@ -250,6 +250,14 @@ async def intercept_root(request: Request, call_next):
         })
     return await call_next(request)
 
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc):
+    print(f"[404 DEBUG] {request.method} {request.url.path} | Query: {request.query_params}", flush=True)
+    # If they are hitting root with query params, just give them a 200 anyway
+    if request.url.path in ["/", ""]:
+        return JSONResponse({"status": "online", "source": "404-fallback"})
+    return JSONResponse(status_code=404, content={"detail": "Not Found", "path": request.url.path})
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     tb = traceback.format_exc()
