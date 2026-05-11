@@ -6,8 +6,9 @@ WORKDIR /app
 
 # System dependencies for OpenCV and building compressai
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libgl1 libglib2.0-0 && \
-    rm -rf /var/lib/apt/lists/*
+    build-essential libgl1 libglib2.0-0 \
+    libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PyTorch CPU-only (saves ~1.5GB vs full torch)
 RUN pip install --no-cache-dir \
