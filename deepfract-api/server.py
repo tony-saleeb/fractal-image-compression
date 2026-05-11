@@ -34,26 +34,39 @@ except ImportError:
     print("[Note] cv2 not installed. LAB color correction will be skipped.", flush=True)
 
 # ── FastAPI ────────────────────────────────────────────────────
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-# ── compressai ────────────────────────────────────────────────
+# ── compressai fallback (Hidden import to silence aggressive IDEs) ──
+import importlib
+COMPRESSAI_MODE = "fallback"
 try:
-    from compressai.models import Cheng2020Attention, Cheng2020Anchor
-    from compressai.ops import compute_padding
-except Exception as e:
-    print(f"[ERROR] compressai import failed: {e}")
-    print("Run:  py patch_compressai.py")
-    sys.exit(1)
+    models_mod = importlib.import_module("compressai.models")
+    ops_mod    = importlib.import_module("compressai.ops")
+    Cheng2020Attention = models_mod.Cheng2020Attention
+    Cheng2020Anchor    = models_mod.Cheng2020Anchor
+    compute_padding    = ops_mod.compute_padding
+    COMPRESSAI_MODE    = "standard"
+except (ImportError, ModuleNotFoundError):
+    try:
+        import compressai_fallback
+        Cheng2020Attention = compressai_fallback.Cheng2020Attention
+        Cheng2020Anchor    = compressai_fallback.Cheng2020Anchor
+        compute_padding    = compressai_fallback.compute_padding
+    except ImportError:
+        print("[ERROR] All compressai imports failed. Please check compressai_fallback.py")
+        sys.exit(1)
+
+print(f"[Info] Neural Engine: {COMPRESSAI_MODE} mode.", flush=True)
 
 # ── Config ────────────────────────────────────────────────────
 MODEL_PATH = os.environ.get(
     'FC_MODEL',
     os.path.join(os.path.dirname(__file__), 'models', 'finetuned_fractalcompression_q2.pth')
 )
-PORT    = int(os.environ.get('FC_PORT', 8000))
+PORT    = int(os.environ.get('PORT', os.environ.get('FC_PORT', 8000)))
 HOST    = os.environ.get('FC_HOST', '0.0.0.0')
 DEVICE  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -214,16 +227,18 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=[
-        "Content-Disposition", 
-        "X-Ratio", 
-        "X-Time", 
-        "X-PSNR", 
-        "X-RMSE", 
-        "X-Width", 
-        "X-Height"
-    ],
+    expose_headers=["*"],
 )
+
+@app.middleware("http")
+async def intercept_root(request: Request, call_next):
+    if request.url.path == "/":
+        return JSONResponse({
+            "status": "online",
+            "message": "DeepFract Root Interceptor Active",
+            "engine": COMPRESSAI_MODE
+        })
+    return await call_next(request)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
@@ -237,7 +252,12 @@ async def global_exception_handler(request, exc):
 
 @app.get("/health")
 def health():
-    return JSONResponse({"status": "ok", "model": MODEL_PATH, "device": str(DEVICE)})
+    return JSONResponse({
+        "status": "ok", 
+        "model": os.path.basename(MODEL_PATH), 
+        "device": str(DEVICE),
+        "engine": COMPRESSAI_MODE
+    })
 
 
 @app.post("/compress")

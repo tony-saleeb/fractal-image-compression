@@ -3,10 +3,10 @@ Utility functions for AI-Enhanced Fractal Image Compression
 """
 
 import numpy as np
-from skimage.metrics import structural_similarity as ssim
-from skimage.metrics import peak_signal_noise_ratio as psnr
 import time
 from functools import wraps
+
+
 
 
 def timing_decorator(func):
@@ -25,7 +25,10 @@ def calculate_psnr(original, compressed):
     """Calculate Peak Signal-to-Noise Ratio between two images"""
     original = np.array(original, dtype=np.float64)
     compressed = np.array(compressed, dtype=np.float64)
-    return psnr(original, compressed, data_range=255)
+    mse = np.mean((original - compressed) ** 2)
+    if mse == 0:
+        return 100
+    return 20 * np.log10(255.0 / np.sqrt(mse))
 
 
 def calculate_rmse(original, compressed):
@@ -37,10 +40,19 @@ def calculate_rmse(original, compressed):
 
 
 def calculate_ssim(original, compressed):
-    """Calculate Structural Similarity Index between two images"""
+    """Calculate Structural Similarity Index between two images using Pure NumPy"""
     original = np.array(original, dtype=np.float64)
     compressed = np.array(compressed, dtype=np.float64)
-    return ssim(original, compressed, data_range=255)
+    C1 = (0.01 * 255)**2
+    C2 = (0.03 * 255)**2
+    mu1 = np.mean(original)
+    mu2 = np.mean(compressed)
+    sigma1_2 = np.var(original)
+    sigma2_2 = np.var(compressed)
+    sigma12 = np.mean((original - mu1) * (compressed - mu2))
+    num = (2 * mu1 * mu2 + C1) * (2 * sigma12 + C2)
+    den = (mu1**2 + mu2**2 + C1) * (sigma1_2 + sigma2_2 + C2)
+    return num / den
 
 
 def calculate_compression_ratio(original_size, compressed_size):

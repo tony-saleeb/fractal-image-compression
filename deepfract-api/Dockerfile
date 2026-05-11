@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -r requirements-deploy.txt
 
 # Copy backend source code
 COPY server.py .
+COPY compressai_fallback.py .
 COPY custom_decoder.py .
 COPY fractalcompression_codec.py .
 COPY patch_compressai.py .
