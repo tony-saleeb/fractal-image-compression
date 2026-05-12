@@ -14,16 +14,16 @@
 #include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  CloudFirestorePluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("CloudFirestorePluginCApi"));
-  FileSelectorWindowsRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FileSelectorWindows"));
-  FirebaseAuthPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FirebaseAuthPluginCApi"));
-  FirebaseCorePluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
-  SharePlusWindowsPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("SharePlusWindowsPluginCApi"));
-  UrlLauncherWindowsRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
+CloudFirestorePluginCApiRegisterWithRegistrar(
+registry->GetRegistrarForPlugin("CloudFirestorePluginCApi"));
+FileSelectorWindowsRegisterWithRegistrar(
+registry->GetRegistrarForPlugin("FileSelectorWindows"));
+FirebaseAuthPluginCApiRegisterWithRegistrar(
+registry->GetRegistrarForPlugin("FirebaseAuthPluginCApi"));
+FirebaseCorePluginCApiRegisterWithRegistrar(
+registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
+SharePlusWindowsPluginCApiRegisterWithRegistrar(
+registry->GetRegistrarForPlugin("SharePlusWindowsPluginCApi"));
+UrlLauncherWindowsRegisterWithRegistrar(
+registry->GetRegistrarForPlugin("UrlLauncherWindows"));
 }
