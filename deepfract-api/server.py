@@ -435,8 +435,8 @@ async def compress_endpoint(image: UploadFile = File(...)):
     stem  = os.path.splitext(image.filename or 'image')[0]
 
     print(f"[compress] {image.filename}  source:{source_w}×{source_h}  "
-          f"encoded:{enc_w}×{enc_h}  "
-          f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  {elapsed:.2f}s", flush=True)
+        f"encoded:{enc_w}×{enc_h}  "
+        f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  {elapsed:.2f}s", flush=True)
 
     response_headers = {
         "Content-Disposition": f'attachment; filename="{stem}.fic"',
@@ -632,7 +632,7 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
 
     stem = os.path.splitext(fic.filename or 'image')[0]
     print(f"[decompress] {fic.filename}  source:{source_w}×{source_h}  "
-          f"encoded:{enc_w}×{enc_h}  size:{len(png_bytes)/1024:.1f} KB  {elapsed:.2f}s", flush=True)
+        f"encoded:{enc_w}×{enc_h}  size:{len(png_bytes)/1024:.1f} KB  {elapsed:.2f}s", flush=True)
 
     response_headers = {
         "Content-Disposition": f'attachment; filename="{stem}.png"',

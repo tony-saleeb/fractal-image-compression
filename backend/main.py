@@ -7,10 +7,10 @@ Achieves 110:1 compression with 28+ dB PSNR.
 PyTorch-only inference — no compressai dependency needed.
 
 Commands:
-  python main.py compress <image> [-o output.fic]
-  python main.py decompress <file.fic> [-o output.png]
-  python main.py benchmark <image_or_dir> [--save-fic]
-  python main.py info <file.fic>
+python main.py compress <image> [-o output.fic]
+python main.py decompress <file.fic> [-o output.png]
+python main.py benchmark <image_or_dir> [--save-fic]
+python main.py info <file.fic>
 """
 
 import argparse
@@ -88,9 +88,7 @@ class GDN(nn.Module):
         gamma = self.gamma_reparam(self.gamma)
         norm = F.conv2d(x ** 2, gamma.unsqueeze(2).unsqueeze(3), beta)
         norm = torch.sqrt(norm)
-        if self.inverse:
-            return x * norm
-        return x / norm
+        return x * norm if self.inverse else x / norm
 
 
 class ResidualBlockWithStride(nn.Module):
@@ -125,10 +123,7 @@ class ResidualBlock(nn.Module):
         self.leaky_relu = nn.LeakyReLU(inplace=True)
         self.conv2 = conv3x3(out_ch, out_ch)
         self.leaky_relu2 = nn.LeakyReLU(inplace=True)
-        if in_ch != out_ch:
-            self.skip = conv1x1(in_ch, out_ch)
-        else:
-            self.skip = None
+        self.skip = conv1x1(in_ch, out_ch) if in_ch != out_ch else None
 
     def forward(self, x):
         identity = x
@@ -291,9 +286,7 @@ def compute_psnr(orig, recon):
     if a.shape != b.shape:
         b = np.array(recon.resize(orig.size, Image.LANCZOS).convert("RGB"), dtype=np.float32)
     mse = ((a - b) ** 2).mean()
-    if mse < 1e-10:
-        return 99.0
-    return 20 * np.log10(255.0 / np.sqrt(mse))
+    return 99.0 if mse < 1e-10 else 20 * np.log10(255.0 / np.sqrt(mse))
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -312,7 +305,7 @@ def cmd_compress(args):
     fic_bytes, bpp = engine.compress_to_fic(img)
     dt = time.time() - t0
 
-    out_path = args.output or os.path.splitext(args.input)[0] + ".fic"
+    out_path = args.output or f"{os.path.splitext(args.input)[0]}.fic"
     with open(out_path, "wb") as f:
         f.write(fic_bytes)
 
@@ -336,7 +329,7 @@ def cmd_decompress(args):
     t0 = time.time()
     img = engine.decompress_from_fic(args.input)
     dt = time.time() - t0
-    out_path = args.output or os.path.splitext(args.input)[0] + "_decompressed.png"
+    out_path = args.output or f"{os.path.splitext(args.input)[0]}_decompressed.png"
     img.save(out_path)
     w, h = img.size
     print(f"Input:  {args.input} ({os.path.getsize(args.input):,} bytes)")
@@ -348,7 +341,7 @@ def cmd_benchmark(args):
     if os.path.isdir(args.input):
         exts = {".jpg", ".jpeg", ".png", ".bmp", ".gif"}
         images = [os.path.join(args.input, f) for f in sorted(os.listdir(args.input))
-                  if os.path.splitext(f)[1].lower() in exts]
+                if os.path.splitext(f)[1].lower() in exts]
     else:
         images = [args.input]
     if not images:
@@ -364,7 +357,7 @@ def cmd_benchmark(args):
     print(f"  BENCHMARK: {len(images)} image(s)")
     print(f"{'='*85}")
     print(f"\n  {'Image':<28} {'PSNR':>8} {'BPP':>8} {'Ratio':>8} "
-          f"{'Orig KB':>9} {'FIC KB':>9} {'Time':>6}")
+        f"{'Orig KB':>9} {'FIC KB':>9} {'Time':>6}")
     print("  " + "-" * 80)
 
     s_psnr = s_bpp = s_ratio = s_orig = s_comp = n = 0
@@ -381,23 +374,27 @@ def cmd_benchmark(args):
             dt = time.time() - t0
             psnr = compute_psnr(img, rec)
             ratio = raw / len(fic)
-            s_psnr += psnr; s_bpp += bpp; s_ratio += ratio
-            s_orig += raw; s_comp += len(fic); n += 1
-            sn = name[:25] + "..." if len(name) > 28 else name
+            s_psnr += psnr
+            s_bpp += bpp
+            s_ratio += ratio
+            s_orig += raw
+            s_comp += len(fic)
+            n += 1
+            sn = f"{name[:25]}..." if len(name) > 28 else name
             print(f"  {sn:<28} {psnr:>7.2f}dB {bpp:>8.4f} {ratio:>7.1f}:1 "
-                  f"{raw/1024:>8.1f} {len(fic)/1024:>8.1f} {dt:>5.1f}s")
+            f"{raw/1024:>8.1f} {len(fic)/1024:>8.1f} {dt:>5.1f}s")
             base = os.path.splitext(name)[0]
             if args.save_fic:
-                with open(os.path.join(results_dir, base + ".fic"), "wb") as f:
+                with open(os.path.join(results_dir, f"{base}.fic"), "wb") as f:
                     f.write(fic)
-            rec.save(os.path.join(results_dir, base + "_reconstructed.png"))
+            rec.save(os.path.join(results_dir, f"{base}_reconstructed.png"))
         except Exception as e:
             print(f"  {name:<28} ERROR: {e}")
 
     if n > 0:
         print("  " + "-" * 80)
         print(f"  {'AVERAGE':<28} {s_psnr/n:>7.2f}dB {s_bpp/n:>8.4f} "
-              f"{s_ratio/n:>7.1f}:1 {s_orig/n/1024:>8.1f} {s_comp/n/1024:>8.1f}")
+        f"{s_ratio/n:>7.1f}:1 {s_orig/n/1024:>8.1f} {s_comp/n/1024:>8.1f}")
         print(f"\n  Overall ratio: {s_orig/s_comp:.1f}:1")
         print(f"  Files saved to: {results_dir}/")
 
@@ -434,14 +431,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main.py compress photo.png -o photo.fic
-  python main.py decompress photo.fic -o restored.png
-  python main.py benchmark data/ --save-fic
-  python main.py info photo.fic""",
+python main.py compress photo.png -o photo.fic
+python main.py decompress photo.fic -o restored.png
+python main.py benchmark data/ --save-fic
+python main.py info photo.fic""",
     )
     sub = parser.add_subparsers(dest="command")
     for name, hlp in [("compress", "Compress image → .fic"), ("decompress", "Decompress .fic → image"),
-                       ("benchmark", "Benchmark image(s)"), ("info", "Show .fic info")]:
+                    ("benchmark", "Benchmark image(s)"), ("info", "Show .fic info")]:
         p = sub.add_parser(name, help=hlp)
         p.add_argument("input")
         if name != "info":

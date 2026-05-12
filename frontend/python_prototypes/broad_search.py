@@ -9,9 +9,8 @@ def broad_search(graph, start_node, target_node=None):
     If target_node is provided, stops when found.
     Returns: list of visited nodes in order.
     """
-    visited = set()
     queue = deque([start_node])
-    visited.add(start_node)
+    visited = {start_node}
     traversal_order = []
 
     print(f"Starting BFS from node: {start_node}")
@@ -30,7 +29,7 @@ def broad_search(graph, start_node, target_node=None):
                 visited.add(neighbor)
                 queue.append(neighbor)
                 print(f"  -> Queuing neighbor: {neighbor}")
-    
+
     return traversal_order
 
 # Visualization

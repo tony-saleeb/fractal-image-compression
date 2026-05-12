@@ -67,14 +67,15 @@ if os.path.exists(reg):
     lines = open(reg, encoding='utf-8').readlines()
     fixed = []
     for line in lines:
-        if 'torch_geometric' in line or ('torch_geometric' in ''.join(fixed[-3:]) and 'torch_geometric' in line):
-            fixed.append('# [PATCHED] ' + line)
-        elif '**{k: v for k, v in torch_geometric' in line:
-            fixed.append('# [PATCHED] ' + line)
+        if (
+            'torch_geometric' in line
+            or '**{k: v for k, v in torch_geometric' in line
+        ):
+            fixed.append(f'# [PATCHED] {line}')
         else:
             fixed.append(line)
     open(reg, 'w', encoding='utf-8').writelines(fixed)
-    print(f"  Fixed: registry/transforms.py")
+    print("  Fixed: registry/transforms.py")
 
 # ── Clear .pyc ───────────────────────────────────────────────
 removed = 0

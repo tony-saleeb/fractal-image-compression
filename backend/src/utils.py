@@ -26,9 +26,7 @@ def calculate_psnr(original, compressed):
     original = np.array(original, dtype=np.float64)
     compressed = np.array(compressed, dtype=np.float64)
     mse = np.mean((original - compressed) ** 2)
-    if mse == 0:
-        return 100
-    return 20 * np.log10(255.0 / np.sqrt(mse))
+    return 100 if mse == 0 else 20 * np.log10(255.0 / np.sqrt(mse))
 
 
 def calculate_rmse(original, compressed):
@@ -57,9 +55,7 @@ def calculate_ssim(original, compressed):
 
 def calculate_compression_ratio(original_size, compressed_size):
     """Calculate compression ratio"""
-    if compressed_size == 0:
-        return 0
-    return original_size / compressed_size
+    return 0 if compressed_size == 0 else original_size / compressed_size
 
 
 def get_compressed_size(transformations):
@@ -89,8 +85,7 @@ def get_image_stats(img):
     }
 
 
-def print_comparison(original, traditional_result, ai_result, 
-                     traditional_time, ai_time, trad_size=0, ai_size=0):
+def print_comparison(original, traditional_result, ai_result, traditional_time, ai_time, trad_size=0, ai_size=0):
     """Print comparison metrics between traditional and AI compression"""
     print("\n" + "="*80)
     print("COMPRESSION COMPARISON RESULTS")

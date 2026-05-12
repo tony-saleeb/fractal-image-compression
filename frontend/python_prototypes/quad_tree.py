@@ -69,10 +69,12 @@ class QuadTreeNode:
 
     def intersects(self, range_rect):
         rx, ry, rw, rh = range_rect
-        return not (rx > self.x + self.width or
-                    rx + rw < self.x or
-                    ry > self.y + self.height or
-                    ry + rh < self.y)
+        return (
+            rx <= self.x + self.width
+            and rx + rw >= self.x
+            and ry <= self.y + self.height
+            and ry + rh >= self.y
+        )
 
     def rect_contains(self, rect, point):
         rx, ry, rw, rh = rect
@@ -99,7 +101,7 @@ if __name__ == "__main__":
     # Insert random points
     points = []
     print("Inserting 50 random points...")
-    for i in range(50):
+    for _ in range(50):
         p = (random.uniform(0, 400), random.uniform(0, 400))
         qt.insert(p)
         points.append(p)
@@ -109,7 +111,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(1)
     ax.set_xlim(0, 400)
     ax.set_ylim(400, 0) # Flip Y to match screen coords logic usually
-    
+
     # Draw points
     x_coords = [p[0] for p in points]
     y_coords = [p[1] for p in points]

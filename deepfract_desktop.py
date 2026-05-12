@@ -208,8 +208,10 @@ async def main(page: ft.Page):
         )
 
     stat_ratio = _make_stat("RATIO", ft.Icons.COMPARE_ARROWS_ROUNDED)
-    stat_psnr  = _make_stat("PSNR", ft.Icons.INSIGHTS_ROUNDED); stat_psnr.visible = False
-    stat_rmse  = _make_stat("RMSE", ft.Icons.TRENDING_DOWN_ROUNDED); stat_rmse.visible = False
+    stat_psnr  = _make_stat("PSNR", ft.Icons.INSIGHTS_ROUNDED)
+    stat_psnr.visible = False
+    stat_rmse  = _make_stat("RMSE", ft.Icons.TRENDING_DOWN_ROUNDED)
+    stat_rmse.visible = False
     stat_size  = _make_stat("SIZE", ft.Icons.STORAGE_ROUNDED)
     stat_time  = _make_stat("TIME", ft.Icons.TIMER_ROUNDED)
 
@@ -288,19 +290,18 @@ async def main(page: ft.Page):
     async def select_file(e=None):
         if state["busy"]:
             return
+        if state["mode"] == "compress":
+            files = await file_picker.pick_files(
+                dialog_title="Select Image",
+                allowed_extensions=["jpg", "jpeg", "png", "bmp", "webp"],
+                allow_multiple=False)
+            if files: await _start_compress(files[0].path)
         else:
-            if state["mode"] == "compress":
-                files = await file_picker.pick_files(
-                    dialog_title="Select Image",
-                    allowed_extensions=["jpg", "jpeg", "png", "bmp", "webp"],
-                    allow_multiple=False)
-                if files: await _start_compress(files[0].path)
-            else:
-                files = await file_picker.pick_files(
-                    dialog_title="Select .fic File",
-                    allowed_extensions=["fic"],
-                    allow_multiple=False)
-                if files: await _start_decompress(files[0].path)
+            files = await file_picker.pick_files(
+                dialog_title="Select .fic File",
+                allowed_extensions=["fic"],
+                allow_multiple=False)
+            if files: await _start_decompress(files[0].path)
 
     async def save_result(e=None):
         if state["mode"] == "compress" and state["fic_bytes"]:
@@ -318,12 +319,12 @@ async def main(page: ft.Page):
 
     async def _show_loading(msg):
         loader = ft.Image(src=logo_src, width=80, height=80, rotate=0, animate_rotation=1000) if logo_src else ft.ProgressRing(color=C["primary"], width=48, height=48)
-        
+
         # Clear stats immediately
         for s in [stat_ratio, stat_psnr, stat_rmse, stat_size, stat_time]:
             _set_stat(s, "—")
         btn_save.visible = False; btn_reset.visible = False
-            
+
         preview_card.content = ft.Column(
             controls=[
                 ft.Container(content=loader, padding=20),
@@ -333,7 +334,7 @@ async def main(page: ft.Page):
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             alignment=ft.MainAxisAlignment.CENTER, spacing=10)
         status_text.value = msg; btn_select.disabled = True; page.update()
-        
+
         if logo_src:
             async def rotate_loop():
                 while state["busy"]:
@@ -400,6 +401,7 @@ async def main(page: ft.Page):
     async def on_keyboard(e: ft.KeyboardEvent):
         if e.ctrl and e.key == "O": await select_file()
         elif e.ctrl and e.key == "S": await save_result()
+
     page.on_keyboard_event = on_keyboard
 
     async def check_api():
@@ -407,6 +409,7 @@ async def main(page: ft.Page):
         api_dot.bgcolor = C["success"] if ok else C["error"]
         api_label.value = "API Connected" if ok else "API Offline"
         page.update()
+
     page.run_task(check_api)
 
 

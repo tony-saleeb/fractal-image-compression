@@ -5,22 +5,22 @@ Compress / decompress images using a finetuned FractalCompression model.
 Achieves ~85:1 ratio with ~29 dB PSNR using learned entropy coding.
 
 Usage:
-  Compress:
+Compress:
     py fractalcompression_codec.py compress --image data/lena.png
-  Decompress:
+Decompress:
     py fractalcompression_codec.py decompress --input data/lena.fic
-  Measure quality:
+Measure quality:
     py fractalcompression_codec.py psnr --image data/lena.png --recon data/lena_decoded.png
 
 .fic file format (FIC1):
-  4 bytes  : magic 'FIC1'
-  2+2 bytes: original width, height (uint16 LE)
-  2+2 bytes: padded width, height   (uint16 LE)
-  2+2 bytes: latent height, width   (uint16 LE)
-  4 bytes  : len(string_y)
-  4 bytes  : len(string_z)
-  N bytes  : string_y  (entropy-coded main latent)
-  M bytes  : string_z  (entropy-coded hyperlatent)
+4 bytes  : magic 'FIC1'
+2+2 bytes: original width, height (uint16 LE)
+2+2 bytes: padded width, height   (uint16 LE)
+2+2 bytes: latent height, width   (uint16 LE)
+4 bytes  : len(string_y)
+4 bytes  : len(string_z)
+N bytes  : string_y  (entropy-coded main latent)
+M bytes  : string_z  (entropy-coded hyperlatent)
 """
 
 import sys, os, struct, time, argparse
@@ -37,13 +37,29 @@ torch.set_num_threads(os.cpu_count() or 4)
 # ──────────────────────────────────────────────
 try:
     from compressai.models import Cheng2020Attention, Cheng2020Anchor
-    from compressai.ops import compute_padding
+    try:
+        from compressai.ops import compute_padding
+    except ImportError:
+        # Architect's Fallback: Manual padding calculation if C++ ops are missing
+        def compute_padding(h: int, w: int, min_div: int = 64):
+            ph = (min_div - (h % min_div)) % min_div
+            pw = (min_div - (w % min_div)) % min_div
+            return ph, pw
 except Exception as e:
-    import traceback
-    print(f"[ERROR] compressai import failed: {e}")
-    print("Run:  py patch_compressai.py")
-    traceback.print_exc()
-    sys.exit(1)
+    # If even the models are missing, try our custom fallback engine
+    try:
+        import compressai_fallback
+        Cheng2020Attention = compressai_fallback.Cheng2020Attention
+        Cheng2020Anchor    = compressai_fallback.Cheng2020Anchor
+        def compute_padding(h: int, w: int, min_div: int = 64):
+            ph = (min_div - (h % min_div)) % min_div
+            pw = (min_div - (w % min_div)) % min_div
+            return ph, pw
+    except ImportError:
+        import traceback
+        print(f"[ERROR] compressai and fallback both failed: {e}")
+        traceback.print_exc()
+        sys.exit(1)
 
 MAGIC         = b'FIC1'
 DEFAULT_MODEL = 'models/finetuned_fractalcompression_q2.pth'
@@ -58,19 +74,14 @@ def load_model(model_path, device):
 
     if isinstance(ckpt, dict):
         print(f"  Epoch: {ckpt.get('epoch','?')} | "
-              f"PSNR: {ckpt.get('val_psnr','?'):.2f} dB | "
-              f"BPP: {ckpt.get('val_bpp','?'):.4f} | "
-              f"Quality: {ckpt.get('quality','?')}", flush=True)
+            f"PSNR: {ckpt.get('val_psnr','?'):.2f} dB | "
+            f"BPP: {ckpt.get('val_bpp','?'):.4f} | "
+            f"Quality: {ckpt.get('quality','?')}", flush=True)
         sd = ckpt.get('model_state_dict', ckpt.get('state_dict', ckpt))
     else:
         sd = ckpt
 
-    # Auto-detect N from analysis transform
-    N = 128
-    for k, v in sd.items():
-        if 'g_a.0.conv1.weight' in k:
-            N = v.shape[0]; break
-
+    N = next((v.shape[0] for k, v in sd.items() if 'g_a.0.conv1.weight' in k), 128)
     # Auto-detect architecture
     has_attention = any('conv_a' in k for k in sd.keys())
     ModelClass = Cheng2020Attention if has_attention else Cheng2020Anchor
@@ -129,7 +140,7 @@ def compress(args):
     shape       = out['shape']
     total_bytes = len(strings_y) + len(strings_z)
 
-    out_path = args.output or os.path.splitext(args.image)[0] + '.fic'
+    out_path = args.output or f'{os.path.splitext(args.image)[0]}.fic'
     with open(out_path, 'wb') as f:
         f.write(MAGIC)
         f.write(struct.pack('<HH', orig_w, orig_h))
@@ -185,7 +196,7 @@ def decompress(args):
     x_hat = F.pad(x_hat, [0, -(pad_w - orig_w), 0, -(pad_h - orig_h)])
     x_hat = torch.clamp(x_hat[:, :, :orig_h, :orig_w], 0, 1)
 
-    out_path = args.output or os.path.splitext(args.input)[0] + '_decoded.png'
+    out_path = args.output or f'{os.path.splitext(args.input)[0]}_decoded.png'
     img_np = (x_hat.squeeze(0).permute(1,2,0).cpu().numpy() * 255).astype(np.uint8)
     Image.fromarray(img_np).save(out_path)
 
