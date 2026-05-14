@@ -93,11 +93,11 @@ export default function PreviewView() {
             <div className={`mt-6 p-4 rounded-2xl border flex items-center justify-between gap-4 ${
               isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50/80 border-gray-200/50'
             }`}>
-              <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
                 <div className={`p-2 rounded-xl shrink-0 ${isDark ? 'bg-white/10 text-white/60' : 'bg-white text-gray-500 shadow-sm'}`}>
                   <HardDrive className="w-5 h-5" />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className={`text-[10px] uppercase font-bold tracking-wider ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Source Payload</p>
                   <p className={`text-sm font-semibold truncate ${isDark ? 'text-white/90' : 'text-gray-800'}`} title={originalFile.name}>
                     {originalFile.name}
