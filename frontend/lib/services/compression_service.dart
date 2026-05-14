@@ -145,7 +145,9 @@ class CompressionService {
       }
       final decodedBytes = await streamed.stream.toBytes();
       final elapsed = double.tryParse(streamed.headers['x-time'] ?? '') ?? 0.0;
-      return DecompressionResult(decodedBytes, elapsed);
+      final psnr = streamed.headers.containsKey('x-psnr') ? double.tryParse(streamed.headers['x-psnr']!) : null;
+      final rmse = streamed.headers.containsKey('x-rmse') ? double.tryParse(streamed.headers['x-rmse']!) : null;
+      return DecompressionResult(decodedBytes, elapsed, psnr: psnr, rmse: rmse);
     } on TimeoutException {
       throw const CompressionException(
         'Decompression timed out (>5 min). The .fic file may be corrupted.',
@@ -218,8 +220,10 @@ class CompressionResult {
 class DecompressionResult {
   final Uint8List imageBytes;
   final double elapsedSeconds;
+  final double? psnr;
+  final double? rmse;
 
-  const DecompressionResult(this.imageBytes, this.elapsedSeconds);
+  const DecompressionResult(this.imageBytes, this.elapsedSeconds, {this.psnr, this.rmse});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

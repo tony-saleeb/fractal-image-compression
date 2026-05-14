@@ -249,12 +249,12 @@ class _CompressionResultScreenState extends State<CompressionResultScreen>
                   widget.compressedSize,
                   isPrimary: true,
                 ),
-                if (widget.compressionRatio != null)
+                if (widget.mode == CompressionMode.compress && widget.compressionRatio != null)
                   _buildModernStat('RATIO', widget.compressionRatio!),
-                if (widget.psnr != null && widget.psnr != '0.00 dB')
-                  _buildModernStat('PSNR', widget.psnr!),
-                if (widget.rmse != null && widget.rmse != '0.00')
-                  _buildModernStat('RMSE', widget.rmse!),
+                if (widget.mode == CompressionMode.decompress) ...[
+                  _buildModernStat('PSNR', widget.psnr ?? '0.00 dB'),
+                  _buildModernStat('RMSE', widget.rmse ?? '0.00'),
+                ],
                 _buildModernStat(
                   'TIME',
                   _formatDuration(widget.compressionTime),

@@ -270,6 +270,8 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                     milliseconds: (decRes.elapsedSeconds * 1000).round(),
                   ),
                   decodedImageBytes: decRes.imageBytes,
+                  psnr: decRes.psnr != null ? '${decRes.psnr!.toStringAsFixed(2)} dB' : null,
+                  rmse: decRes.rmse != null ? decRes.rmse!.toStringAsFixed(2) : null,
                 ),
           ),
         );
