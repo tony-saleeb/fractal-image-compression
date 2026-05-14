@@ -391,10 +391,18 @@ async def compress_endpoint(image: UploadFile = File(...)):
         
         def _task():
             with torch.inference_mode():
-                return MODEL.compress(tile_x)
+                comp = MODEL.compress(tile_x)
+                dec = MODEL.decompress(comp['strings'], comp['shape'])
+                
+                # Calculate exact SSE for this unpadded tile
+                x_hat_crop = dec['x_hat'][:, :, :th, :tw]
+                tile_x_crop = tile_x[:, :, :th, :tw]
+                sse = F.mse_loss(tile_x_crop, x_hat_crop, reduction='sum').item()
+                
+                return comp, sse
         
-        res = await asyncio.to_thread(_task)
-        return (ty, tx, res, th, tw)
+        res, sse = await asyncio.to_thread(_task)
+        return (ty, tx, res, th, tw, sse)
 
     # Launch all tiles in parallel (saturates 2 cores instantly)
     tasks = []
@@ -405,15 +413,22 @@ async def compress_endpoint(image: UploadFile = File(...)):
     all_results = await asyncio.gather(*tasks)
     elapsed = time.time() - t0
     
+    # ── Calculate PSNR and RMSE ───────────────────────────────────
+    total_sse = sum(sse for _, _, _, _, _, sse in all_results)
+    total_pixels = 3 * enc_h * enc_w
+    mse = total_sse / total_pixels if total_pixels > 0 else 0
+    rmse = math.sqrt(mse) if mse > 0 else 0.0
+    psnr = 10 * math.log10(1.0 / mse) if mse > 0 else 100.0
+
     # ── FIC4 Bitstream Construction ───────────────────────────────
     buf = io.BytesIO()
     buf.write(b'FIC4')                                       # magic v4 (Tiled)
-    buf.write(struct.pack('<ff', 0.0, 0.0))                  # metrics placeholder
+    buf.write(struct.pack('<ff', psnr, rmse))                # metrics
     buf.write(struct.pack('<HH', source_w, source_h))        # original dims
     buf.write(struct.pack('<HH', enc_w,    enc_h))           # encoded dims
     buf.write(struct.pack('<HH', tiles_y,  tiles_x))         # tile grid
     
-    for ty, tx, res, th, tw in sorted(all_results):
+    for ty, tx, res, th, tw, _ in sorted(all_results):
         sy = res['strings'][0][0]
         sz = res['strings'][1][0]
         shape = res['shape']
@@ -424,7 +439,6 @@ async def compress_endpoint(image: UploadFile = File(...)):
         buf.write(sz)
         
     fic_bytes = buf.getvalue()
-    psnr, rmse = 0.0, 0.0
 
     bpp   = (len(fic_bytes) * 8) / (enc_w * enc_h)
     
