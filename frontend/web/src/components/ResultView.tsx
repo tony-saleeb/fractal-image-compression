@@ -130,14 +130,33 @@ export default function ResultView({
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <QuickStaticCard 
-          icon={<BarChart3 className="w-4 h-4" />} 
-          label={mode === 'compress' ? 'Compression Ratio' : 'Neural Expansion'} 
-          value={mainRatio}
-          color="text-blue-500"
-          isDark={isDark}
-        />
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${mode === 'decompress' ? 'lg:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
+        {mode === 'compress' ? (
+          <QuickStaticCard 
+            icon={<BarChart3 className="w-4 h-4" />} 
+            label="Compression Ratio" 
+            value={mainRatio}
+            color="text-blue-500"
+            isDark={isDark}
+          />
+        ) : (
+          <>
+            <QuickStaticCard 
+              icon={<Activity className="w-4 h-4" />} 
+              label="PSNR (dB)" 
+              value={(decompressResult?.psnr || 0).toFixed(2)}
+              color="text-blue-500"
+              isDark={isDark}
+            />
+            <QuickStaticCard 
+              icon={<Activity className="w-4 h-4" />} 
+              label="RMSE" 
+              value={(decompressResult?.rmse || 0).toFixed(2)}
+              color="text-indigo-500"
+              isDark={isDark}
+            />
+          </>
+        )}
         <QuickStaticCard 
           icon={<HardDrive className="w-4 h-4" />} 
           label="Payload Size" 
