@@ -201,6 +201,22 @@ export default function ResultView({
             </h3>
             
             <div className="space-y-4">
+              {mode === 'decompress' && decompressResult?.psnr !== undefined && decompressResult.psnr > 0 && (
+                <SpecItem 
+                  icon={<Activity className="w-4 h-4" />} 
+                  label="PSNR (Fidelity)" 
+                  value={`${decompressResult.psnr.toFixed(2)} dB`} 
+                  isDark={isDark} 
+                />
+              )}
+              {mode === 'decompress' && decompressResult?.rmse !== undefined && decompressResult.rmse > 0 && (
+                <SpecItem 
+                  icon={<Activity className="w-4 h-4" />} 
+                  label="RMSE (Error)" 
+                  value={decompressResult.rmse.toFixed(2)} 
+                  isDark={isDark} 
+                />
+              )}
               <SpecItem 
                 icon={<HardDrive className="w-4 h-4" />} 
                 label="Encoded Size" 
