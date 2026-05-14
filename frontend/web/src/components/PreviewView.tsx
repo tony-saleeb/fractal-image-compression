@@ -73,7 +73,7 @@ export default function PreviewView() {
           </div>
 
           {/* ── Right Side: Processing Controls & Info ── */}
-          <div className="w-full flex flex-col justify-between py-2">
+          <div className="flex-1 min-w-0 flex flex-col justify-between py-2">
             
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 text-xs font-semibold uppercase tracking-wide mb-2">
