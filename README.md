@@ -103,6 +103,27 @@ npm run dev
 npm run build
 ```
 
+### 📈 Performance Profiling (Latency & Ratios)
+A dedicated CLI profiler tool, [profile_compression.py](file:///c:/Users/TONY/development/fractal-image-compression/profile_compression.py), is available in the root folder to benchmark core neural model compute durations, isolate API network overhead, and display PSNR/RMSE and exact compression ratios.
+
+#### Method 1: API Server Profiling (Zero-Dependency Client)
+This mode measures client-to-server request and response times, parsing the server's compute duration from response headers (`X-Time`) to isolate network transfer latency from compression and decompression time.
+*Ensure your backend server is running first (`python server.py` in the backend folder).*
+```bash
+python profile_compression.py --image frontend/assets/images/lena.png
+```
+
+#### Method 2: Local Engine Profiling (Offline)
+This mode profiles the compression and decompression algorithms locally on your machine using the native PyTorch models, running without any server.
+*Ensure you have activated your backend virtual environment first.*
+```bash
+# 1. Activate the python virtual environment:
+.\backend\venv\Scripts\activate
+
+# 2. Run the profiler locally:
+python profile_compression.py --image frontend/assets/images/lena.png --local
+```
+
 ## 🛠 Project Structure
 
 ```
