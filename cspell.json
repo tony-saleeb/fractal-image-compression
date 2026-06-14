@@ -32,6 +32,8 @@
     "subosito",
     "UNet",
     "withOpacity",
-    "withValues"
+    "withValues",
+    "roundtrip",
+    "roundtrips"
   ]
 }

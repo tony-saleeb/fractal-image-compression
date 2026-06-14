@@ -271,7 +271,7 @@ class _MobileHomeScreenState extends State<_MobileHomeScreen> {
                   ),
                   decodedImageBytes: decRes.imageBytes,
                   psnr: decRes.psnr != null ? '${decRes.psnr!.toStringAsFixed(2)} dB' : null,
-                  rmse: decRes.rmse != null ? decRes.rmse!.toStringAsFixed(2) : null,
+                  rmse: decRes.rmse?.toStringAsFixed(2),
                 ),
           ),
         );
