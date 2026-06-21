@@ -180,4 +180,7 @@ class Cheng2020Attention(Cheng2020Anchor):
 def compute_padding(h, w, min_div=64):
     out_h = (h + min_div - 1) // min_div * min_div
     out_w = (w + min_div - 1) // min_div * min_div
-    return 0, out_w - w, 0, out_h - h
+    pad = (0, out_w - w, 0, out_h - h)
+    unpad = (0, -(out_w - w), 0, -(out_h - h))
+    return pad, unpad
+
