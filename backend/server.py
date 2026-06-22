@@ -291,8 +291,16 @@ async def compress_endpoint(image: UploadFile = File(...)):
     x = x.permute(2, 0, 1).unsqueeze(0).contiguous()
 
     h, w = x.shape[2], x.shape[3]
-    pad, _ = compute_padding(h, w, min_div=64)
-    x_pad = F.pad(x, pad, mode='constant', value=0).to(DEVICE)
+    # Ensure multiples of 64 AND at least 128x128 
+    # (Satisfies both 16x main and 4x hyper-prior stages + 5x5 context kernel)
+    target_h = max(128, ((h + 63) // 64) * 64)
+    target_w = max(128, ((w + 63) // 64) * 64)
+    
+    p_h = target_h - h
+    p_w = target_w - w
+    
+    # Pad right and bottom (F.pad takes [left, right, top, bottom])
+    x_pad = F.pad(x, (0, p_w, 0, p_h), mode='constant', value=0).to(DEVICE)
 
     # ── Heavy inference offloaded to thread pool ──────────────────
     def _compress():

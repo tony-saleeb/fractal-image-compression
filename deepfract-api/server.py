@@ -355,56 +355,92 @@ async def compress_endpoint(image: UploadFile = File(...)):
     else:
         enc_w, enc_h = source_w, source_h
 
-    x = torch.from_numpy(np.array(img)).float().div_(255.0)
-    x = x.permute(2, 0, 1).unsqueeze(0).contiguous()
-
-    h, w = x.shape[2], x.shape[3]
-    pad, _ = compute_padding(h, w, min_div=64)
-    x_pad = F.pad(x, pad, mode='constant', value=0).to(DEVICE)
-
-    # ── Heavy inference offloaded to thread pool ──────────────────
-    def _compress():
-        gc.disable()
-        try:
-            with torch.inference_mode():
-                comp = MODEL.compress(x_pad)
-                # Decompress to compute PSNR/RMSE
-                dec = MODEL.decompress(comp['strings'], comp['shape'])
-                x_hat = dec['x_hat'][:, :, :h, :w]
-                sse = F.mse_loss(x[:, :, :h, :w], x_hat, reduction='sum').item()
-                return comp, sse
-        finally:
-            gc.enable()
-
+    # ── FIC4: Architectural Tiled Parallel Pipeline ───────────────
+    # We split the image into tiles to saturate all CPU cores
+    TILE_SIZE = 512
+    OVERLAP   = 32 # Padding to prevent boundary artifacts
+    
     t0 = time.time()
-    out, total_sse = await asyncio.to_thread(_compress)
-    elapsed = time.time() - t0
+    
+    # Pre-process using our JIT-compiled kernel
+    x = preprocess_image(torch.from_numpy(np.array(img)).unsqueeze(0))
+    h, w = x.shape[2], x.shape[3]
+    
+    # Calculate tile grid
+    tiles_y = (h + TILE_SIZE - 1) // TILE_SIZE
+    tiles_x = (w + TILE_SIZE - 1) // TILE_SIZE
+    
+    print(f"  [Architect] Tiled Encoding: {tiles_y}x{tiles_x} grid", flush=True)
+    
+    tile_data = []
+    
+    async def _process_tile(ty, tx):
+        # Extract tile coordinates
+        y_start = ty * TILE_SIZE
+        x_start = tx * TILE_SIZE
+        y_end   = min(y_start + TILE_SIZE, h)
+        x_end   = min(x_start + TILE_SIZE, w)
+        
+        # Pad to multiples of 64
+        th, tw = y_end - y_start, x_end - x_start
+        ph = ((th + 63) // 64) * 64 - th
+        pw = ((tw + 63) // 64) * 64 - tw
+        
+        tile_x = x[:, :, y_start:y_end, x_start:x_end]
+        tile_x = F.pad(tile_x, (0, pw, 0, ph), mode='constant', value=0).to(DEVICE)
+        
+        def _task():
+            with torch.inference_mode():
+                comp = MODEL.compress(tile_x)
+                dec = MODEL.decompress(comp['strings'], comp['shape'])
+                
+                # Calculate exact SSE for this unpadded tile
+                x_hat_crop = dec['x_hat'][:, :, :th, :tw]
+                tile_x_crop = tile_x[:, :, :th, :tw]
+                sse = F.mse_loss(tile_x_crop, x_hat_crop, reduction='sum').item()
+                
+                return comp, sse
+        
+        res, sse = await asyncio.to_thread(_task)
+        return (ty, tx, res, th, tw, sse)
 
+    # Launch all tiles in parallel (saturates 2 cores instantly)
+    tasks = []
+    for ty in range(tiles_y):
+        for tx in range(tiles_x):
+            tasks.append(_process_tile(ty, tx))
+            
+    all_results = await asyncio.gather(*tasks)
+    elapsed = time.time() - t0
+    
     # ── Calculate PSNR and RMSE ───────────────────────────────────
+    total_sse = sum(sse for _, _, _, _, _, sse in all_results)
     total_pixels = 3 * enc_h * enc_w
     mse = total_sse / total_pixels if total_pixels > 0 else 0
     rmse = math.sqrt(mse) if mse > 0 else 0.0
     psnr = 10 * math.log10(1.0 / mse) if mse > 0 else 100.0
 
-    sy    = out['strings'][0][0]
-    sz    = out['strings'][1][0]
-    shape = out['shape']
-
-    # Build .fic bytes in memory — FIC2 format stores source dims for upscaling
+    # ── FIC4 Bitstream Construction ───────────────────────────────
     buf = io.BytesIO()
-    buf.write(b'FIC3')                                       # magic v3 (with metrics)
+    buf.write(b'FIC4')                                       # magic v4 (Tiled)
     buf.write(struct.pack('<ff', psnr, rmse))                # metrics
     buf.write(struct.pack('<HH', source_w, source_h))        # original dims
     buf.write(struct.pack('<HH', enc_w,    enc_h))           # encoded dims
-    buf.write(struct.pack('<HH', x_pad.shape[3], x_pad.shape[2]))  # padded dims
-    buf.write(struct.pack('<HH', shape[0], shape[1]))        # latent dims
-    buf.write(struct.pack('<I', len(sy)))
-    buf.write(struct.pack('<I', len(sz)))
-    buf.write(sy)
-    buf.write(sz)
+    buf.write(struct.pack('<HH', tiles_y,  tiles_x))         # tile grid
+    
+    for ty, tx, res, th, tw, _ in sorted(all_results):
+        sy = res['strings'][0][0]
+        sz = res['strings'][1][0]
+        shape = res['shape']
+        buf.write(struct.pack('<HH', th, tw))                # tile dims
+        buf.write(struct.pack('<HH', shape[0], shape[1]))    # latent dims
+        buf.write(struct.pack('<II', len(sy),  len(sz)))
+        buf.write(sy)
+        buf.write(sz)
+        
     fic_bytes = buf.getvalue()
 
-    bpp   = (len(sy) + len(sz)) * 8 / (enc_w * enc_h)
+    bpp   = (len(fic_bytes) * 8) / (enc_w * enc_h)
     
     # Calculate ratio against the actual original file size (e.g. PNG size)
     original_file_size = len(data)
@@ -412,8 +448,8 @@ async def compress_endpoint(image: UploadFile = File(...)):
     
     stem  = os.path.splitext(image.filename or 'image')[0]
 
-    print(f"[compress] {image.filename}  source:{source_w}×{source_h}  "  
-        f"encoded:{enc_w}×{enc_h}  "  
+    print(f"[compress] {image.filename}  source:{source_w}×{source_h}  "
+        f"encoded:{enc_w}×{enc_h}  "
         f"{len(fic_bytes)/1024:.1f} KB  {ratio:.1f}:1  {elapsed:.2f}s", flush=True)
 
     response_headers = {
