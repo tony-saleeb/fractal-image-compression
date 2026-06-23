@@ -440,92 +440,62 @@ async def compress_endpoint(image: UploadFile = File(...)):
     else:
         enc_w, enc_h = source_w, source_h
 
-    # ── FIC4: Architectural Tiled Parallel Pipeline ───────────────
-    # We split the image into tiles to saturate all CPU cores
-    TILE_SIZE = 512
-    OVERLAP   = 32 # Padding to prevent boundary artifacts
-    
+    # ── Whole-Image Compression (FIC3: no tiles = no seam artifacts) ─
     t0 = time.time()
     
-    # Pre-process using our JIT-compiled kernel
     x = preprocess_image(torch.from_numpy(np.array(img)).unsqueeze(0))
     h, w = x.shape[2], x.shape[3]
     
-    # Calculate tile grid
-    tiles_y = (h + TILE_SIZE - 1) // TILE_SIZE
-    tiles_x = (w + TILE_SIZE - 1) // TILE_SIZE
+    # Ensure multiples of 64 AND at least 128x128
+    # (Satisfies both 16x main and 4x hyper-prior stages + 5x5 context kernel)
+    target_h = max(128, ((h + 63) // 64) * 64)
+    target_w = max(128, ((w + 63) // 64) * 64)
+    p_h = target_h - h
+    p_w = target_w - w
     
-    print(f"  [Architect] Tiled Encoding: {tiles_y}x{tiles_x} grid", flush=True)
+    # Pad right and bottom
+    x_pad = F.pad(x, (0, p_w, 0, p_h), mode='constant', value=0).to(DEVICE)
     
-    tile_data = []
-    
-    async def _process_tile(ty, tx):
-        # Extract tile coordinates
-        y_start = ty * TILE_SIZE
-        x_start = tx * TILE_SIZE
-        y_end   = min(y_start + TILE_SIZE, h)
-        x_end   = min(x_start + TILE_SIZE, w)
-        
-        # Pad to multiples of 64
-        th, tw = y_end - y_start, x_end - x_start
-        ph = ((th + 63) // 64) * 64 - th
-        pw = ((tw + 63) // 64) * 64 - tw
-        
-        tile_x = x[:, :, y_start:y_end, x_start:x_end]
-        tile_x = F.pad(tile_x, (0, pw, 0, ph), mode='constant', value=0).to(DEVICE)
-        
-        def _task():
+    # ── Heavy inference offloaded to thread pool ──────────────────
+    def _compress():
+        gc.disable()
+        try:
             with torch.inference_mode():
-                comp = MODEL.compress(tile_x)
-                dec = MODEL.decompress(comp['strings'], comp['shape'])
-                
-                # Calculate exact SSE for this unpadded tile
-                x_hat_crop = dec['x_hat'][:, :, :th, :tw]
-                tile_x_crop = tile_x[:, :, :th, :tw]
-                sse = F.mse_loss(tile_x_crop, x_hat_crop, reduction='sum').item()
-                
-                return comp, sse
-        
-        res, sse = await asyncio.to_thread(_task)
-        return (ty, tx, res, th, tw, sse)
+                comp = MODEL.compress(x_pad)
+                dec  = MODEL.decompress(comp['strings'], comp['shape'])
+                # Calculate PSNR/RMSE on unpadded region
+                x_hat_crop = dec['x_hat'][:, :, :h, :w]
+                x_crop     = x_pad[:, :, :h, :w]
+                mse_val    = F.mse_loss(x_crop, x_hat_crop).item()
+                return comp, mse_val
+        finally:
+            gc.enable()
 
-    # Launch all tiles in parallel (saturates 2 cores instantly)
-    tasks = []
-    for ty in range(tiles_y):
-        for tx in range(tiles_x):
-            tasks.append(_process_tile(ty, tx))
-            
-    all_results = await asyncio.gather(*tasks)
+    out, mse = await asyncio.to_thread(_compress)
     elapsed = time.time() - t0
     
-    # ── Calculate PSNR and RMSE ───────────────────────────────────
-    total_sse = sum(sse for _, _, _, _, _, sse in all_results)
-    total_pixels = 3 * enc_h * enc_w
-    mse = total_sse / total_pixels if total_pixels > 0 else 0
     rmse = math.sqrt(mse) if mse > 0 else 0.0
     psnr = 10 * math.log10(1.0 / mse) if mse > 0 else 100.0
+    
+    sy    = out['strings'][0][0]
+    sz    = out['strings'][1][0]
+    shape = out['shape']
 
-    # ── FIC4 Bitstream Construction ───────────────────────────────
+    # ── FIC3 Bitstream (whole-image, with metrics) ────────────────
     buf = io.BytesIO()
-    buf.write(b'FIC4')                                       # magic v4 (Tiled)
+    buf.write(b'FIC3')                                       # magic v3
     buf.write(struct.pack('<ff', psnr, rmse))                # metrics
     buf.write(struct.pack('<HH', source_w, source_h))        # original dims
     buf.write(struct.pack('<HH', enc_w,    enc_h))           # encoded dims
-    buf.write(struct.pack('<HH', tiles_y,  tiles_x))         # tile grid
-    
-    for ty, tx, res, th, tw, _ in sorted(all_results):
-        sy = res['strings'][0][0]
-        sz = res['strings'][1][0]
-        shape = res['shape']
-        buf.write(struct.pack('<HH', th, tw))                # tile dims
-        buf.write(struct.pack('<HH', shape[0], shape[1]))    # latent dims
-        buf.write(struct.pack('<II', len(sy),  len(sz)))
-        buf.write(sy)
-        buf.write(sz)
-        
+    buf.write(struct.pack('<HH', x_pad.shape[3], x_pad.shape[2]))  # padded dims
+    buf.write(struct.pack('<HH', shape[0], shape[1]))        # latent dims
+    buf.write(struct.pack('<I', len(sy)))
+    buf.write(struct.pack('<I', len(sz)))
+    buf.write(sy)
+    buf.write(sz)
     fic_bytes = buf.getvalue()
 
-    bpp   = (len(fic_bytes) * 8) / (enc_w * enc_h)
+    bpp   = (len(sy) + len(sz)) * 8 / (enc_w * enc_h)
     
     # Calculate ratio against the actual original file size (e.g. PNG size)
     original_file_size = len(data)
@@ -778,12 +748,13 @@ def preprocess_image(x: torch.Tensor):
 if __name__ == "__main__":
     # init_upsampler()  # SR disabled — using neural decoder only
     
-    # Clear stale decompress cache (old results may have seam artifacts)
+    # Clear stale caches (old FIC4 tiled results have seam artifacts)
     import shutil
-    _dec_cache = os.path.join(os.path.dirname(__file__), '.cache_decompress')
-    if os.path.isdir(_dec_cache):
-        shutil.rmtree(_dec_cache, ignore_errors=True)
-        print("  Cleared stale decompress cache.", flush=True)
+    for _cache_name in ('.cache_compress', '.cache_decompress'):
+        _cache_dir = os.path.join(os.path.dirname(__file__), _cache_name)
+        if os.path.isdir(_cache_dir):
+            shutil.rmtree(_cache_dir, ignore_errors=True)
+            print(f"  Cleared stale {_cache_name} cache.", flush=True)
     
     load_model()
     print(f"Server running at http://localhost:{PORT}", flush=True)
