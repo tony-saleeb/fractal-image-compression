@@ -143,6 +143,91 @@ def init_upsampler():
         UPSAMPLER = None
 
 
+def blend_tile_seams(canvas_tensor, tile_size, blend_width=16):
+    """
+    Smooth visible seam lines at tile boundaries on a [1,C,H,W] tensor.
+    
+    Applies a 1-D Gaussian blur along every horizontal and vertical tile
+    boundary.  Only the narrow strip around each seam is touched — the
+    rest of the image is untouched, so quality is preserved and the cost
+    is negligible.
+    
+    Args:
+        canvas_tensor: [1, 3, H, W] float tensor (0-1 range)
+        tile_size: the grid spacing used during tiled compression
+        blend_width: half-width of the blending strip in pixels
+    Returns:
+        Tensor with the same shape, seams smoothed.
+    """
+    _, c, h, w = canvas_tensor.shape
+    result = canvas_tensor.clone()
+
+    # Build a small 1-D Gaussian kernel (σ = blend_width / 3)
+    sigma = max(blend_width / 3.0, 1.0)
+    ks = blend_width * 2 + 1  # kernel size (always odd)
+    coords = torch.arange(ks, dtype=torch.float32) - blend_width
+    kernel_1d = torch.exp(-0.5 * (coords / sigma) ** 2)
+    kernel_1d = kernel_1d / kernel_1d.sum()
+
+    # ── Horizontal seams (rows at multiples of tile_size) ──────────
+    for y in range(tile_size, h, tile_size):
+        y0 = max(y - blend_width, 0)
+        y1 = min(y + blend_width, h)
+        if y1 - y0 < 3:
+            continue
+        strip = canvas_tensor[:, :, y0:y1, :]          # [1, C, strip_h, W]
+
+        # Blur vertically: reshape kernel to [1, 1, ks, 1]
+        k = kernel_1d[:y1 - y0].clone()
+        k = k / k.sum()
+        k_v = k.reshape(1, 1, -1, 1)
+        # Apply per-channel
+        blurred = torch.cat([
+            F.conv2d(
+                strip[:, ch:ch+1, :, :],
+                k_v,
+                padding=(k_v.shape[2] // 2, 0)
+            )
+            for ch in range(c)
+        ], dim=1)
+        # Crop to exact strip height (conv may add a row)
+        blurred = blurred[:, :, :y1 - y0, :]
+
+        # Blend weight: 1.0 at the seam line, 0.0 at the edges
+        ramp = torch.linspace(0, 1, y1 - y0)
+        alpha = 1.0 - 2.0 * (ramp - 0.5).abs()  # triangle: peaks at center
+        alpha = alpha.reshape(1, 1, -1, 1)
+        result[:, :, y0:y1, :] = (1 - alpha) * canvas_tensor[:, :, y0:y1, :] + alpha * blurred
+
+    # ── Vertical seams (columns at multiples of tile_size) ─────────
+    for x in range(tile_size, w, tile_size):
+        x0 = max(x - blend_width, 0)
+        x1 = min(x + blend_width, w)
+        if x1 - x0 < 3:
+            continue
+        strip = result[:, :, :, x0:x1]                 # use result (already h-blended)
+
+        k = kernel_1d[:x1 - x0].clone()
+        k = k / k.sum()
+        k_h = k.reshape(1, 1, 1, -1)
+        blurred = torch.cat([
+            F.conv2d(
+                strip[:, ch:ch+1, :, :],
+                k_h,
+                padding=(0, k_h.shape[3] // 2)
+            )
+            for ch in range(c)
+        ], dim=1)
+        blurred = blurred[:, :, :, :x1 - x0]
+
+        ramp = torch.linspace(0, 1, x1 - x0)
+        alpha = 1.0 - 2.0 * (ramp - 0.5).abs()
+        alpha = alpha.reshape(1, 1, 1, -1)
+        result[:, :, :, x0:x1] = (1 - alpha) * result[:, :, :, x0:x1] + alpha * blurred
+
+    return result
+
+
 def sr_tiled_inference(model, x_hat, tile_size=128, overlap=16):
     """
     Run SR model in tiles to stay cache-friendly on CPU.
@@ -577,6 +662,12 @@ async def decompress_endpoint(fic: UploadFile = File(...)):
                 full_canvas[y_s:y_s+th, x_s:x_s+tw, :] = tile_np
         
         x_hat = torch.from_numpy(full_canvas).permute(2, 0, 1).unsqueeze(0).to(DEVICE)
+        
+        # ── Seam Blending: smooth visible tile boundary artifacts ──
+        if tiles_y > 1 or tiles_x > 1:
+            print("  [Architect] Blending tile seams...", flush=True)
+            x_hat = blend_tile_seams(x_hat, TILE_SIZE, blend_width=16)
+        x_hat = torch.clamp(x_hat, 0, 1)
     else:
         # Legacy FIC1/2/3
         pad_w, pad_h = struct.unpack('<HH', buf.read(4))
@@ -686,6 +777,14 @@ def preprocess_image(x: torch.Tensor):
 # ── Entry point ────────────────────────────────────────────────
 if __name__ == "__main__":
     # init_upsampler()  # SR disabled — using neural decoder only
+    
+    # Clear stale decompress cache (old results may have seam artifacts)
+    import shutil
+    _dec_cache = os.path.join(os.path.dirname(__file__), '.cache_decompress')
+    if os.path.isdir(_dec_cache):
+        shutil.rmtree(_dec_cache, ignore_errors=True)
+        print("  Cleared stale decompress cache.", flush=True)
+    
     load_model()
     print(f"Server running at http://localhost:{PORT}", flush=True)
     print(f"  POST http://localhost:{PORT}/compress   => upload image => .fic")
