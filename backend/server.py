@@ -25,6 +25,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = None # Disable decompression bomb limits for massive images
 
 try:
     import cv2
@@ -272,7 +273,21 @@ async def compress_endpoint(image: UploadFile = File(...)):
     try:
         img = Image.open(io.BytesIO(data)).convert('RGB')
     except Exception as e:
-        raise HTTPException(400, f"Cannot open image: {e}")
+        # Try cv2 as fallback if cv2 is installed (highly robust on Windows for various formats/decoders)
+        if HAS_CV2:
+            try:
+                nparr = np.frombuffer(data, np.uint8)
+                cv_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                if cv_img is not None:
+                    cv_img_rgb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+                    img = Image.fromarray(cv_img_rgb)
+                    print("[Info] Successfully opened image using OpenCV fallback.", flush=True)
+                else:
+                    raise Exception("OpenCV failed to decode image")
+            except Exception as cv_err:
+                raise HTTPException(400, f"Cannot open image: {e} (OpenCV fallback also failed: {cv_err})")
+        else:
+            raise HTTPException(400, f"Cannot open image: {e}")
 
     # Keep original source dimensions for upscaling on decompress
     source_w, source_h = img.size   # before any resize
