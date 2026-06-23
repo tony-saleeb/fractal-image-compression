@@ -181,7 +181,7 @@ export default function ResultView({
               <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-blue-500/40 backdrop-blur-md border border-blue-400/20 text-[10px] font-bold text-white uppercase tracking-widest shadow-xl">
                 {mode === 'compress' ? 'Source' : 'Reconstructed Output'}
               </div>
-              <div className="aspect-16/10 sm:aspect-video rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center">
+              <div className="aspect-[3/4] sm:aspect-video rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center">
                 {mode === 'compress' ? (
                   originalPreviewUrl && (
                     (originalFile?.size ?? 0) > 50 * 1024 * 1024 ? (
@@ -194,7 +194,7 @@ export default function ResultView({
                       <img 
                         src={originalPreviewUrl} 
                         alt="Source" 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" 
                       />
                     )
                   )
@@ -203,7 +203,7 @@ export default function ResultView({
                     <img 
                       src={decompressedPreviewUrl} 
                       alt="Reconstructed Output" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                      className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" 
                     />
                   )
                 )}
